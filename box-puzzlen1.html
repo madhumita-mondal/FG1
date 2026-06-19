@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sliding IQ Puzzle</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        :root {
+            --bg1: #b7ef86;
+            --bg2: #7167e4;
+            --bg3: #03654b;
+            --text: #fff;
+            --muted: #d7e4ff;
+            --gold: #ffe9a8;
+            --panel: rgba(225, 82, 82, .08);
+            --panel-border: rgba(255, 255, 255, .16);
+            --tile-border: #e295c3;
+            --shadow: 0 18px 40px rgba(0, 0, 0, .28);
+            --glow: 0 0 20px rgba(123, 223, 255, .45);
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top left, rgba(55, 213, 248, .18), transparent 18%),
+                radial-gradient(circle at top right, rgba(55, 213, 248, .18), transparent 18%),
+                linear-gradient(180deg, var(--bg1), var(--bg2) 48%, var(--bg3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-shell {
+            width: min(100%, 920px);
+            border-radius: 30px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(4, 12, 60, .9), rgba(22, 56, 160, .88));
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .35);
+        }
+
+        .top-banner {
+            text-align: center;
+            padding: 28px 20px 22px;
+            background: linear-gradient(180deg, rgba(2, 6, 40, .98), rgba(4, 12, 70, .92));
+            border-bottom: 3px solid rgba(132, 194, 255, .45);
+        }
+
+        .top-banner h1 {
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff7b2, #fff, #8ff7ff, #ffd1f3, #fff7b2);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: titleMove 4s linear infinite;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            color: var(--muted)
+        }
+
+        .game-area {
+            padding: 26px 20px 30px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .score-panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 26px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .iq-box {
+            background: linear-gradient(180deg, #12869a, #c52695);
+            border-radius: 22px;
+            padding: 22px 18px;
+            text-align: center;
+        }
+
+        .iq-label {
+            display: block;
+            font-size: 1rem;
+            letter-spacing: 1.5px;
+            color: #cfe2ff;
+            margin-bottom: 10px
+        }
+
+        .iq-value {
+            display: inline-block;
+            min-width: 130px;
+            font-size: clamp(3rem, 7vw, 4.5rem);
+            font-weight: 900;
+            color: #10205c;
+            background: linear-gradient(180deg, #fff7a8, #ffcc3d);
+            border-radius: 20px;
+            padding: 8px 16px;
+            box-shadow: 0 0 24px rgba(255, 233, 168, .55);
+        }
+
+        .stats {
+            margin-top: 18px;
+            display: grid;
+            gap: 14px
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, rgba(130, 230, 255, .14), rgba(70, 133, 255, .14));
+            border: 1px solid rgba(165, 225, 255, .22);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-card span:last-child {
+            font-size: 1.2rem;
+            font-weight: 800
+        }
+
+        .controls {
+            margin-top: 18px;
+            display: grid;
+            gap: 12px
+        }
+
+        .controls button {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            color: #0b1858;
+            background: linear-gradient(180deg, #fff4b8, #ffd86a);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, .2), inset 0 2px 6px rgba(255, 255, 255, .55);
+        }
+
+        .board-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center
+        }
+
+        .board {
+            width: min(92vw, 540px);
+            aspect-ratio: 1/1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 14px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(129, 196, 255, .38), rgba(40, 95, 223, .45));
+            border: 2px solid rgba(155, 228, 255, .34);
+            box-shadow: var(--shadow), inset 0 0 24px rgba(140, 230, 255, .18);
+        }
+
+        .tile {
+            border: 2px solid var(--tile-border);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(197, 248, 255, .98), rgba(21, 58, 15, .95));
+            color: #f9feff;
+            font-size: clamp(1.7rem, 4vw, 3rem);
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .14), 0 10px 18px rgba(5, 20, 90, .28), var(--glow);
+            text-shadow: 0 2px 0 rgba(64, 110, 220, .6), 0 0 10px rgba(255, 255, 255, .45);
+        }
+
+        .tile.empty {
+            background: linear-gradient(180deg, #0b1666, #08104b);
+            cursor: default
+        }
+
+        .message-panel {
+            grid-column: 1/-1;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 20px;
+            padding: 14px 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .win {
+            animation: winPulse .8s ease-in-out infinite alternate
+        }
+
+        .win-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .62);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .win-overlay.hidden {
+            display: none
+        }
+
+        .win-card {
+            width: min(92vw, 440px);
+            background: linear-gradient(180deg, #fff7b2, #8ff7ff, #ffd1f3);
+            color: #10205c;
+            border-radius: 28px;
+            padding: 28px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .45);
+            animation: popWin .45s ease;
+        }
+
+        .win-signal {
+            font-size: 3.2rem;
+            margin-bottom: 8px;
+            animation: trophyBounce 1s ease infinite
+        }
+
+        .win-card h2 {
+            font-size: 2rem;
+            margin-bottom: 10px
+        }
+
+        .badge {
+            display: inline-block;
+            margin: 12px 0;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: #10205c;
+            color: #fff;
+            font-weight: 900;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .25);
+        }
+
+        .stars {
+            font-size: 1.9rem;
+            margin: 8px 0;
+            letter-spacing: 3px
+        }
+
+        .win-card p {
+            font-size: 1.05rem;
+            font-weight: 800;
+            line-height: 1.5
+        }
+
+        .win-card button {
+            margin-top: 18px;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 24px;
+            font-weight: 900;
+            background: #10205c;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .firework {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: firework 1.25s ease-out forwards;
+        }
+
+        .f1 {
+            left: 18%;
+            top: 25%;
+            background: #fff7a8
+        }
+
+        .f2 {
+            left: 78%;
+            top: 22%;
+            background: #8ff7ff;
+            animation-delay: .15s
+        }
+
+        .f3 {
+            left: 50%;
+            top: 15%;
+            background: #ffd1f3;
+            animation-delay: .3s
+        }
+
+        .f4 {
+            left: 30%;
+            top: 72%;
+            background: #9dffb1;
+            animation-delay: .45s
+        }
+
+        .f5 {
+            left: 72%;
+            top: 70%;
+            background: #ffb86b;
+            animation-delay: .6s
+        }
+
+        @keyframes titleMove {
+            to {
+                background-position: 300% center
+            }
+        }
+
+        @keyframes winPulse {
+            from {
+                box-shadow: 0 0 18px rgba(145, 241, 255, .45)
+            }
+
+            to {
+                box-shadow: 0 0 32px rgba(255, 236, 146, .9)
+            }
+        }
+
+        @keyframes popWin {
+            from {
+                transform: scale(.75);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        @keyframes trophyBounce {
+            50% {
+                transform: translateY(-8px) scale(1.08)
+            }
+        }
+
+        @keyframes firework {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 0 0 currentColor
+            }
+
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+                box-shadow: 0 -70px 0 4px currentColor, 55px -40px 0 3px currentColor,
+                    55px 40px 0 3px currentColor, 0 70px 0 4px currentColor,
+                    -55px 40px 0 3px currentColor, -55px -40px 0 3px currentColor;
+            }
+        }
+
+        @media(max-width:820px) {
+            .game-area {
+                grid-template-columns: 1fr
+            }
+
+            .board {
+                width: min(94vw, 520px)
+            }
+        }
+
+        @media(max-width:560px) {
+            body {
+                padding: 10px
+            }
+
+            .game-area {
+                padding: 16px 12px 20px;
+                gap: 16px
+            }
+
+            .board {
+                gap: 8px;
+                padding: 10px
+            }
+
+            .tile {
+                font-size: clamp(1.4rem, 7vw, 2.2rem)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="box-puzzle3mode.html" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Slide Puzzle </div>
+    </a>
+    <div class="game-shell">
+        <div class="top-banner">
+            <h1>Sliding IQ Puzzle</h1>
+            <p class="subtitle">Arrange the numbers in order. Finish the puzzle and unlock your IQ badge!</p>
+        </div>
+
+        <div class="game-area">
+            <aside class="score-panel">
+                <div class="iq-box">
+                    <span class="iq-label">IQ SCORE</span>
+                    <span class="iq-value" id="iqValue">60</span>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card"><span class="label">Moves</span><span id="moveCount">0</span></div>
+                    <div class="stat-card"><span class="label">Time</span><span id="timer">00:00</span></div>
+                </div>
+
+                <div class="controls">
+                    <button id="shuffleBtn">Shuffle Puzzle</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
+            </aside>
+
+            <main class="board-wrap">
+                <div class="board" id="board"></div>
+            </main>
+
+            <div class="message-panel" id="message">Tap Shuffle to start a new puzzle.</div>
+        </div>
+    </div>
+
+    <div id="winOverlay" class="win-overlay hidden">
+        <span class="firework f1"></span>
+        <span class="firework f2"></span>
+        <span class="firework f3"></span>
+        <span class="firework f4"></span>
+        <span class="firework f5"></span>
+
+        <div class="win-card">
+            <div class="win-signal">🏆</div>
+            <h2 id="winTitle">Puzzle Completed!</h2>
+            <div class="badge" id="badgeText">Puzzle Master</div>
+            <div class="stars" id="starText">⭐⭐⭐⭐⭐</div>
+            <p id="winText"></p>
+            <button id="closeWinBtn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        const board = document.getElementById("board");
+        const moveCountEl = document.getElementById("moveCount");
+        const timerEl = document.getElementById("timer");
+        const messageEl = document.getElementById("message");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const iqValueEl = document.getElementById("iqValue");
+
+        const winOverlay = document.getElementById("winOverlay");
+        const winText = document.getElementById("winText");
+        const badgeText = document.getElementById("badgeText");
+        const starText = document.getElementById("starText");
+        const closeWinBtn = document.getElementById("closeWinBtn");
+
+        const SIZE = 4;
+        const EMPTY = 0;
+        const SOLVED_BOARD = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+
+        let tiles = [...SOLVED_BOARD];
+        let moves = 0;
+        let seconds = 0;
+        let timerInterval = null;
+        let gameStarted = false;
+        let gameWon = false;
+
+        function renderBoard() {
+            board.innerHTML = "";
+            tiles.forEach((value, index) => {
+                const tile = document.createElement("button");
+                tile.className = "tile";
+                tile.type = "button";
+                tile.dataset.index = index;
+
+                if (value === EMPTY) {
+                    tile.classList.add("empty");
+                    tile.disabled = true;
+                    tile.textContent = "";
+                } else {
+                    tile.textContent = value;
+                    tile.addEventListener("click", () => handleTileClick(index));
+                }
+
+                if (gameWon && value !== EMPTY) {
+                    tile.classList.add("win");
+                }
+
+                board.appendChild(tile);
+            });
+        }
+
+        function handleTileClick(index) {
+            if (gameWon) return;
+
+            const emptyIndex = tiles.indexOf(EMPTY);
+
+            if (!isAdjacent(index, emptyIndex)) {
+                messageEl.textContent = "Only tiles next to the empty space can move.";
+                return;
+            }
+
+            if (!gameStarted) {
+                startTimer();
+                gameStarted = true;
+            }
+
+            swapTiles(index, emptyIndex);
+            moves++;
+            updateMoves();
+            renderBoard();
+
+            if (checkWin()) {
+                gameWon = true;
+                stopTimer();
+                const finalIQ = updateIQ();
+                animateIQ(60, finalIQ);
+                renderBoard();
+
+                messageEl.innerHTML = `
+      🏆 Amazing! You solved it in <b>${moves}</b> moves and 
+      <b>${formatTime(seconds)}</b>. IQ Score: 
+      <b style="color:#ffe9a8;font-size:1.3rem;">${finalIQ}</b>
+    `;
+
+                showWinMessage(finalIQ);
+            } else {
+                messageEl.textContent = "Good move! Keep going.";
+            }
+        }
+
+        function isAdjacent(index1, index2) {
+            const row1 = Math.floor(index1 / SIZE);
+            const col1 = index1 % SIZE;
+            const row2 = Math.floor(index2 / SIZE);
+            const col2 = index2 % SIZE;
+
+            return (
+                row1 === row2 && Math.abs(col1 - col2) === 1 ||
+                col1 === col2 && Math.abs(row1 - row2) === 1
+            );
+        }
+
+        function swapTiles(i, j) {
+            [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+
+        function updateMoves() {
+            moveCountEl.textContent = moves;
+        }
+
+        function updateTimer() {
+            timerEl.textContent = formatTime(seconds);
+        }
+
+        function formatTime(totalSeconds) {
+            const mins = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+            const secs = String(totalSeconds % 60).padStart(2, "0");
+            return `${mins}:${secs}`;
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateTimer();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function checkWin() {
+            return tiles.every((value, index) => value === SOLVED_BOARD[index]);
+        }
+
+        function resetGame() {
+            tiles = [...SOLVED_BOARD];
+            moves = 0;
+            seconds = 0;
+            gameStarted = false;
+            gameWon = false;
+            stopTimer();
+            updateMoves();
+            updateTimer();
+            iqValueEl.textContent = "60";
+            messageEl.textContent = "Tap Shuffle to start a new puzzle.";
+            winOverlay.classList.add("hidden");
+            renderBoard();
+        }
+
+        function shuffleGame() {
+            tiles = [...SOLVED_BOARD];
+            let emptyIndex = tiles.indexOf(EMPTY);
+
+            for (let i = 0; i < 300; i++) {
+                const neighbors = getMovableNeighbors(emptyIndex);
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                swapTiles(emptyIndex, randomNeighbor);
+                emptyIndex = randomNeighbor;
+            }
+
+            if (checkWin()) {
+                shuffleGame();
+                return;
+            }
+
+            moves = 0;
+            seconds = 0;
+            gameStarted = false;
+            gameWon = false;
+            stopTimer();
+            updateMoves();
+            updateTimer();
+            iqValueEl.textContent = "60";
+            messageEl.textContent = "Puzzle shuffled! Start sliding the tiles.";
+            winOverlay.classList.add("hidden");
+            renderBoard();
+        }
+
+        function getMovableNeighbors(emptyIndex) {
+            const row = Math.floor(emptyIndex / SIZE);
+            const col = emptyIndex % SIZE;
+            const neighbors = [];
+
+            if (row > 0) neighbors.push(emptyIndex - SIZE);
+            if (row < SIZE - 1) neighbors.push(emptyIndex + SIZE);
+            if (col > 0) neighbors.push(emptyIndex - 1);
+            if (col < SIZE - 1) neighbors.push(emptyIndex + 1);
+
+            return neighbors;
+        }
+
+        function updateIQ() {
+            let iqScore = 60;
+
+            if (moves <= 80) iqScore += 60;
+            else if (moves <= 100) iqScore += 40;
+            else if (moves <= 110) iqScore += 35;
+            else if (moves <= 120) iqScore += 30;
+            else if (moves <= 130) iqScore += 25;
+            else if (moves <= 140) iqScore += 20;
+            else if (moves <= 150) iqScore += 15;
+            else iqScore += 7;
+
+            if (seconds <= 120) iqScore += 60;
+            else if (seconds <= 180) iqScore += 40;
+            else if (seconds <= 210) iqScore += 35;
+            else if (seconds <= 240) iqScore += 25;
+            else if (seconds <= 290) iqScore += 20;
+            else if (seconds <= 300) iqScore += 15;
+            else if (seconds <= 330) iqScore += 10;
+
+            iqValueEl.textContent = iqScore;
+            return iqScore;
+        }
+
+        function animateIQ(start, end) {
+            let current = start;
+            const step = Math.max(1, Math.ceil((end - start) / 30));
+
+            const counter = setInterval(() => {
+                current += step;
+                if (current >= end) {
+                    current = end;
+                    clearInterval(counter);
+                }
+                iqValueEl.textContent = current;
+            }, 35);
+        }
+
+        function showWinMessage(finalIQ) {
+            let badge = "🥉 Puzzle Explorer";
+            let stars = "⭐⭐⭐";
+            let praise = "Nice effort! You completed the challenge!";
+
+            if (finalIQ >= 170) {
+                badge = "👑 Grand Puzzle Champion";
+                stars = "⭐⭐⭐⭐⭐";
+                praise = "Outstanding! Your puzzle-solving focus is amazing!";
+            } else if (finalIQ >= 140) {
+                badge = "🥇 Puzzle Genius";
+                stars = "⭐⭐⭐⭐⭐";
+                praise = "Excellent work! You solved it like a pro!";
+            } else if (finalIQ >= 110) {
+                badge = "🥈 Smart Solver";
+                stars = "⭐⭐⭐⭐";
+                praise = "Very smart! You completed the puzzle beautifully!";
+            }
+
+            badgeText.textContent = badge;
+            starText.textContent = stars;
+
+            winText.innerHTML = `
+    ${praise}<br><br>
+    🧠 IQ Score: <span style="font-size:1.7rem;">${finalIQ}</span><br>
+    Moves: ${moves}<br>
+    Time: ${formatTime(seconds)}
+  `;
+
+            winOverlay.classList.remove("hidden");
+        }
+
+        shuffleBtn.addEventListener("click", shuffleGame);
+        resetBtn.addEventListener("click", resetGame);
+        closeWinBtn.addEventListener("click", () => {
+            winOverlay.classList.add("hidden");
+        });
+
+        resetGame();
+    </script>
+</body>
+
+</html>

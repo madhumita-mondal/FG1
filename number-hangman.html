@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Hangman Blast</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: auto
+        }
+
+        :root {
+            --bg1: #041f3d;
+            --bg2: #063c6b;
+            --bg3: #00a8cc;
+            --green1: #00ff9d;
+            --green2: #38ef7d;
+            --blue1: #00c6ff;
+            --blue2: #0072ff;
+            --red1: #ff4d6d;
+            --red2: #ff1e56;
+            --white: #ffffff;
+            --text: #eafcff;
+            --muted: #b8e7f3;
+            --card: rgba(255, 255, 255, .1);
+            --border: rgba(255, 255, 255, .18);
+            --shadow: 0 18px 45px rgba(0, 0, 0, .35);
+            --glow-blue: 0 0 16px rgba(0, 198, 255, .55);
+            --glow-green: 0 0 16px rgba(0, 255, 157, .45);
+            --glow-red: 0 0 16px rgba(255, 30, 86, .45);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(0, 255, 157, .18), transparent 20%),
+                radial-gradient(circle at 80% 15%, rgba(0, 198, 255, .22), transparent 20%),
+                radial-gradient(circle at 50% 80%, rgba(255, 30, 86, .15), transparent 18%),
+                linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            overflow-x: hidden;
+        }
+
+        .bg-lines::before,
+        .bg-lines::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-lines::before {
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: .25;
+        }
+
+        .bg-lines::after {
+            background: radial-gradient(circle at center, rgba(255, 255, 255, .08), transparent 55%);
+            opacity: .4;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: min(1220px, 94%);
+            margin: 24px auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 24px 18px 18px;
+            margin-bottom: 18px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(0, 198, 255, .15), rgba(0, 255, 157, .12));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            letter-spacing: 1px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: var(--glow-blue), var(--glow-green);
+        }
+
+        .hero p {
+            margin: 12px auto 0;
+            max-width: 850px;
+            font-size: 1.02rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            min-width: 0;
+        }
+
+        .panel h2 {
+            margin: 0 0 14px;
+            font-size: 1.35rem;
+            color: var(--white);
+            text-shadow: var(--glow-blue);
+        }
+
+        .stage {
+            min-height: 300px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(0, 198, 255, .10), rgba(0, 255, 157, .08)), rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: inset 0 0 35px rgba(255, 255, 255, .04);
+            padding: 18px;
+        }
+
+        .secret-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 18px 0;
+        }
+
+        .slot {
+            width: 48px;
+            height: 58px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(0, 198, 255, .18), rgba(0, 255, 157, .12));
+            border: 2px solid rgba(255, 255, 255, .16);
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: white;
+            box-shadow: var(--glow-blue);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 18px;
+            padding: 14px 12px;
+            text-align: center;
+        }
+
+        .label,
+        .small {
+            font-size: .9rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .box {
+            margin-top: 16px;
+            border-radius: 20px;
+            padding: 16px;
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+        }
+
+        .player-setup {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        select,
+        input {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 800;
+            outline: none;
+            color: #043425;
+            background: linear-gradient(135deg, #ffffff, #b8f3ff);
+        }
+
+        #nameInputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .player-name-input {
+            width: 100%
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 16px;
+            padding: 13px 18px;
+            font-size: 1rem;
+            font-weight: 800;
+            color: white;
+            transition: .18s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px) scale(1.02)
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue1), var(--blue2));
+            box-shadow: 0 10px 24px rgba(0, 114, 255, .35), var(--glow-blue);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--green1), #00c76f);
+            color: #04253d;
+            box-shadow: 0 10px 24px rgba(0, 255, 157, .32), var(--glow-green);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--red1), var(--red2));
+            box-shadow: 0 10px 24px rgba(255, 30, 86, .30), var(--glow-red);
+        }
+
+        .players-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .player-card {
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .14);
+            font-weight: 800;
+        }
+
+        .player-card.active {
+            background: linear-gradient(135deg, rgba(0, 198, 255, .28), rgba(0, 255, 157, .22));
+            box-shadow: var(--glow-green);
+            border-color: rgba(0, 255, 157, .6);
+        }
+
+        .player-score {
+            margin-top: 6px;
+            font-size: 1.35rem;
+            color: white;
+        }
+
+        .current-player {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--green1);
+            text-shadow: var(--glow-green);
+        }
+
+        .guess-row {
+            display: grid;
+            grid-template-columns: 1fr 150px;
+            gap: 10px;
+        }
+
+        #guessInput {
+            width: 100%;
+            font-size: 1.1rem
+        }
+
+        .digit-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .key-btn {
+            min-height: 48px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 900;
+            background: linear-gradient(180deg, rgba(0, 198, 255, .18), rgba(0, 255, 157, .14));
+            border: 1px solid rgba(255, 255, 255, .14);
+            color: white;
+        }
+
+        .status-message {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            min-height: 28px;
+        }
+
+        .status-message.win {
+            color: var(--green1);
+            text-shadow: var(--glow-green)
+        }
+
+        .status-message.lose {
+            color: #ffd2db;
+            text-shadow: var(--glow-red)
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 18px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .history-digits {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .result {
+            min-width: 70px;
+            text-align: center;
+            border-radius: 14px;
+            padding: 10px 8px;
+            font-weight: 900;
+        }
+
+        .correct {
+            background: rgba(0, 255, 157, .18);
+            border: 2px solid rgba(0, 255, 157, .75);
+            box-shadow: var(--glow-green);
+        }
+
+        .wrong-place {
+            background: rgba(255, 221, 90, .18);
+            border: 2px solid rgba(255, 221, 90, .75);
+        }
+
+        .absent {
+            background: rgba(255, 77, 109, .16);
+            border: 2px solid rgba(255, 77, 109, .65);
+        }
+
+        .no-points {
+            background: rgba(0, 198, 255, .14);
+            border: 2px solid rgba(0, 198, 255, .55);
+        }
+
+        .badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            font-size: .85rem;
+        }
+
+        @media(max-width:980px) {
+            .game-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:640px) {
+            .wrap {
+                width: 95%;
+                margin: 16px auto 24px
+            }
+
+            .panel {
+                padding: 16px;
+                border-radius: 22px
+            }
+
+            .stats,
+            .players-board {
+                grid-template-columns: 1fr
+            }
+
+            .guess-row {
+                grid-template-columns: 1fr
+            }
+
+            .digit-grid {
+                grid-template-columns: repeat(5, 1fr)
+            }
+
+            button,
+            select,
+            input {
+                width: 100%
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="hangmanblast.html" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Hangman Blast </div>
+    </a>
+
+    <div class="bg-lines"></div>
+
+    <div class="wrap">
+        <section class="hero">
+            <h1>Number Hangman Blast</h1>
+            <p>
+                Guess the hidden 5–9 digit number. Green means correct position, yellow means right digit but wrong
+                position, and red means the digit is not in the number.
+            </p>
+        </section>
+
+        <section class="game-grid">
+
+            <div class="panel">
+                <h2>Number Stage</h2>
+
+                <div class="stage">
+                    <div class="small">Hidden Number</div>
+                    <div class="secret-slots" id="secretSlots"></div>
+
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="label">Wrong Digits</div>
+                            <div class="value" id="wrongInfo">0 / 10</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Turn</div>
+                            <div class="value" id="turnInfo">1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Length</div>
+                            <div class="value" id="lengthInfo">5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box">
+                    <div class="small">Players Points Board</div>
+
+                    <div class="player-setup">
+                        <select id="playerCount">
+                            <option value="1">1 Player</option>
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                            <option value="5">5 Players</option>
+                            <option value="6">6 Players</option>
+                            <option value="7">7 Players</option>
+                            <option value="8">8 Players</option>
+                            <option value="9">9 Players</option>
+                        </select>
+
+                        <select id="digitLength">
+                            <option value="5">5 Digits</option>
+                            <option value="6">6 Digits</option>
+                            <option value="7">7 Digits</option>
+                            <option value="8">8 Digits</option>
+                            <option value="9">9 Digits</option>
+                        </select>
+
+                        <select id="repeatMode">
+                            <option value="unique">Unique Digits</option>
+                            <option value="repeat">Repeated Digits</option>
+                        </select>
+
+                        <select id="maxWrong">
+                            <option value="8">8 Wrong</option>
+                            <option value="10" selected>10 Wrong</option>
+                            <option value="12">12 Wrong</option>
+                            <option value="15">15 Wrong</option>
+                        </select>
+
+                        <button class="btn-secondary" id="generateInputsBtn">Enter Names</button>
+                        <div id="nameInputs"></div>
+                        <button class="btn-primary" id="startPlayersBtn">Start Game</button>
+                        <button class="btn-secondary" id="shuffleOrderBtn">Shuffle Turn Order</button>
+                        <button class="btn-danger" id="clearScoresBtn">Refresh Scores</button>
+                    </div>
+
+                    <div class="players-board" id="playersBoard"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Guess the Number</h2>
+
+                <div class="box">
+                    <div class="status-message" id="statusMessage">Enter player names, then press Start Game!</div>
+                    <div class="current-player" id="currentPlayerBox">Current Turn: Player 1</div>
+                </div>
+
+                <div class="box">
+                    <div class="small">Enter full number guess</div>
+                    <div class="guess-row">
+                        <input id="guessInput" inputmode="numeric" autocomplete="off" placeholder="Example: 7628159">
+                        <button class="btn-primary" id="guessBtn">Guess</button>
+                    </div>
+
+                    <div class="digit-grid" id="digitGrid"></div>
+                </div>
+
+                <div class="box">
+                    <div class="small">Rules</div>
+                    <p class="small">
+                        🟩 First correct digit + correct position = +25.
+                        🟨 First correct digit but wrong position = +10.
+                        ❌ Wrong digit = -5.
+                        🏆 Full correct number = +30 winner bonus.
+                        Already-scored digits/positions give 0.
+                    </p>
+                </div>
+
+                <div class="box">
+                    <div class="player-setup">
+                        <button class="btn-secondary" id="skipBtn">Skip Turn</button>
+                        <button class="btn-danger" id="revealBtn">Reveal Answer</button>
+                        <button class="btn-primary" id="newGameBtn">New Game</button>
+                    </div>
+                </div>
+
+                <div class="box">
+                    <div class="small">Guess History</div>
+                    <div id="historyBox"></div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <script>
+        let players = [];
+        let secretNumber = "";
+        let currentPlayerIndex = 0;
+        let turnNumber = 1;
+        let gameOver = true;
+        let digitLength = 5;
+        let maxWrongAllowed = 10;
+        let repeatMode = "unique";
+
+        let globalFoundDigits = new Set();
+        let globalCorrectPositions = new Set();
+
+        const playerCount = document.getElementById("playerCount");
+        const digitLengthEl = document.getElementById("digitLength");
+        const repeatModeEl = document.getElementById("repeatMode");
+        const maxWrongEl = document.getElementById("maxWrong");
+        const nameInputs = document.getElementById("nameInputs");
+        const playersBoard = document.getElementById("playersBoard");
+        const currentPlayerBox = document.getElementById("currentPlayerBox");
+        const secretSlots = document.getElementById("secretSlots");
+        const wrongInfo = document.getElementById("wrongInfo");
+        const turnInfo = document.getElementById("turnInfo");
+        const lengthInfo = document.getElementById("lengthInfo");
+        const guessInput = document.getElementById("guessInput");
+        const historyBox = document.getElementById("historyBox");
+        const statusMessage = document.getElementById("statusMessage");
+        const digitGrid = document.getElementById("digitGrid");
+
+        function saveScores() {
+            const cleanPlayers = players.map(p => ({
+                name: p.name,
+                score: p.score,
+                wrongCount: p.wrongCount || 0,
+                eliminated: p.eliminated || false
+            }));
+            localStorage.setItem("numberHangmanPlayers", JSON.stringify(cleanPlayers));
+        }
+
+        function loadScores() {
+            const saved = localStorage.getItem("numberHangmanPlayers");
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length) {
+                        players = parsed.map(p => ({
+                            name: p.name,
+                            score: p.score || 0,
+                            wrongCount: 0,
+                            eliminated: false,
+                            wrongDigits: new Set()
+                        }));
+                    }
+                } catch {
+                    players = [{ name: "Player 1", score: 0, wrongCount: 0, eliminated: false, wrongDigits: new Set() }];
+                }
+            }
+
+            if (!players.length) {
+                players = [{ name: "Player 1", score: 0, wrongCount: 0, eliminated: false, wrongDigits: new Set() }];
+            }
+        }
+
+        function createNameInputs() {
+            const count = Number(playerCount.value);
+            nameInputs.innerHTML = "";
+
+            for (let i = 1; i <= count; i++) {
+                const input = document.createElement("input");
+                input.className = "player-name-input";
+                input.placeholder = `Enter Player ${i} name`;
+                input.value = players[i - 1]?.name || `Player ${i}`;
+
+                input.addEventListener("input", () => {
+                    const name = input.value.trim() || `Player ${i}`;
+                    if (players[i - 1]) {
+                        players[i - 1].name = name;
+                    } else {
+                        players[i - 1] = {
+                            name,
+                            score: 0,
+                            wrongCount: 0,
+                            eliminated: false,
+                            wrongDigits: new Set()
+                        };
+                    }
+                    saveScores();
+                    renderPlayersBoard();
+                });
+
+                nameInputs.appendChild(input);
+            }
+        }
+
+        function renderPlayersBoard() {
+            playersBoard.innerHTML = "";
+
+            if (!players.length) {
+                players = [{ name: "Player 1", score: 0, wrongCount: 0, eliminated: false, wrongDigits: new Set() }];
+                currentPlayerIndex = 0;
+            }
+
+            if (currentPlayerIndex >= players.length) {
+                currentPlayerIndex = 0;
+            }
+
+            players.forEach((player, index) => {
+                const card = document.createElement("div");
+                card.className = "player-card";
+
+                if (index === currentPlayerIndex && !gameOver) {
+                    card.classList.add("active");
+                }
+
+                card.innerHTML = `
+      <div>${index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🎮"} ${player.name}</div>
+      <div class="player-score">${player.score}</div>
+      <div class="small">${player.eliminated ? "Out" : "Playing"} | Wrong: ${player.wrongCount || 0}</div>
+    `;
+
+                playersBoard.appendChild(card);
+            });
+
+            currentPlayerBox.textContent = `Current Turn: ${players[currentPlayerIndex]?.name || "Player 1"}`;
+        }
+
+        function setStatus(message, type = "") {
+            statusMessage.textContent = message;
+            statusMessage.className = "status-message";
+            if (type) statusMessage.classList.add(type);
+        }
+
+        function generateSecretNumber(length, mode) {
+            const digits = "0123456789";
+
+            if (mode === "unique") {
+                let arr = digits.split("");
+
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+
+                if (arr[0] === "0") {
+                    const swapIndex = arr.findIndex(d => d !== "0");
+                    [arr[0], arr[swapIndex]] = [arr[swapIndex], arr[0]];
+                }
+
+                return arr.slice(0, length).join("");
+            }
+
+            let number = "";
+            for (let i = 0; i < length; i++) {
+                let digit = Math.floor(Math.random() * 10).toString();
+                if (i === 0 && digit === "0") {
+                    digit = String(Math.floor(Math.random() * 9) + 1);
+                }
+                number += digit;
+            }
+            return number;
+        }
+
+        function makeSecretSlots() {
+            secretSlots.innerHTML = "";
+            for (let i = 0; i < digitLength; i++) {
+                const slot = document.createElement("div");
+                slot.className = "slot";
+                slot.id = "slot" + i;
+                slot.textContent = "?";
+                secretSlots.appendChild(slot);
+            }
+        }
+
+        function createDigitButtons() {
+            digitGrid.innerHTML = "";
+            for (let i = 0; i <= 9; i++) {
+                const btn = document.createElement("button");
+                btn.className = "key-btn";
+                btn.textContent = i;
+                btn.addEventListener("click", () => {
+                    guessInput.value += String(i);
+                    guessInput.focus();
+                });
+                digitGrid.appendChild(btn);
+            }
+        }
+
+        function startGame() {
+            const count = Number(playerCount.value);
+            digitLength = Number(digitLengthEl.value);
+            repeatMode = repeatModeEl.value;
+            maxWrongAllowed = Number(maxWrongEl.value);
+
+            const inputs = document.querySelectorAll(".player-name-input");
+            const scoreMap = {};
+            players.forEach(p => scoreMap[p.name] = p.score || 0);
+
+            players = [];
+
+            for (let i = 0; i < count; i++) {
+                const name = inputs[i]?.value.trim() || `Player ${i + 1}`;
+                players.push({
+                    name,
+                    score: scoreMap[name] ?? 0,
+                    wrongCount: 0,
+                    eliminated: false,
+                    wrongDigits: new Set()
+                });
+            }
+
+            secretNumber = generateSecretNumber(digitLength, repeatMode);
+            currentPlayerIndex = 0;
+            turnNumber = 1;
+            gameOver = false;
+
+            globalFoundDigits = new Set();
+            globalCorrectPositions = new Set();
+
+            historyBox.innerHTML = "";
+            guessInput.value = "";
+
+            makeSecretSlots();
+            createDigitButtons();
+            updateUI();
+            saveScores();
+
+            setStatus("Start guessing the number!");
+            window.scrollTo(0, 0);
+
+            console.log("Secret number:", secretNumber);
+        }
+
+        function submitGuess() {
+            if (gameOver) return;
+
+            const guess = guessInput.value.trim();
+
+            if (!/^\d+$/.test(guess)) {
+                alert("Please enter numbers only.");
+                return;
+            }
+
+            if (guess.length !== digitLength) {
+                alert("Your guess must be exactly " + digitLength + " digits.");
+                return;
+            }
+
+            const player = players[currentPlayerIndex];
+
+            if (player.eliminated) {
+                nextPlayer();
+                updateUI();
+                return;
+            }
+
+            let roundPoints = 0;
+            let results = [];
+
+            for (let i = 0; i < guess.length; i++) {
+                const digit = guess[i];
+                const secretDigit = secretNumber[i];
+                const posKey = digit + "-" + i;
+
+                let status = "";
+                let points = 0;
+
+                if (digit === secretDigit) {
+                    status = "correct";
+
+                    if (!globalFoundDigits.has(digit)) {
+                        points += 10;
+                        globalFoundDigits.add(digit);
+                    }
+
+                    if (!globalCorrectPositions.has(posKey)) {
+                        points += 15;
+                        globalCorrectPositions.add(posKey);
+                        document.getElementById("slot" + i).textContent = digit;
+                    }
+
+                } else if (secretNumber.includes(digit)) {
+                    status = "wrong-place";
+
+                    if (!globalFoundDigits.has(digit)) {
+                        points += 10;
+                        globalFoundDigits.add(digit);
+                    }
+
+                } else {
+                    status = "absent";
+
+                    if (!player.wrongDigits.has(digit)) {
+                        points -= 5;
+                        player.wrongDigits.add(digit);
+                        player.wrongCount++;
+                    }
+                }
+
+                roundPoints += points;
+
+                results.push({
+                    digit,
+                    status,
+                    points,
+                    position: i + 1
+                });
+            }
+
+            player.score += roundPoints;
+            addHistory(player.name, guess, results, roundPoints);
+
+            if (guess === secretNumber) {
+                player.score += 30;
+                gameOver = true;
+                revealAllSlots();
+                setStatus(`🏆 ${player.name} wins! Winner bonus +30`, "win");
+                updateUI();
+                saveScores();
+                return;
+            }
+
+            if (player.wrongCount >= maxWrongAllowed) {
+                player.eliminated = true;
+            }
+
+            guessInput.value = "";
+            nextPlayer();
+            updateUI();
+            saveScores();
+
+            if (allPlayersOut()) {
+                gameOver = true;
+                revealAllSlots();
+                setStatus(`Game over! The number was ${secretNumber}`, "lose");
+            }
+        }
+
+        function addHistory(playerName, guess, results, points) {
+            const card = document.createElement("div");
+            card.className = "history-card";
+
+            let html = `
+    <b>${playerName}</b> guessed <b>${guess}</b>
+    <span class="badge">Points: ${points >= 0 ? "+" : ""}${points}</span>
+    <div class="history-digits">
+  `;
+
+            results.forEach(r => {
+                let label = "";
+                let css = r.status;
+
+                if (r.status === "correct") label = "🟩 Correct";
+                if (r.status === "wrong-place") label = "🟨 Wrong Pos";
+                if (r.status === "absent") label = "❌ No";
+
+                if (r.points === 0) {
+                    css = "no-points";
+                    label += "<br>Already";
+                }
+
+                html += `
+      <div class="result ${css}">
+        ${r.digit}<br>
+        <small>${label}</small><br>
+        <small>${r.points >= 0 ? "+" : ""}${r.points}</small>
+      </div>
+    `;
+            });
+
+            html += "</div>";
+            card.innerHTML = html;
+            historyBox.prepend(card);
+        }
+
+        function nextPlayer() {
+            let tries = 0;
+
+            do {
+                currentPlayerIndex++;
+                if (currentPlayerIndex >= players.length) {
+                    currentPlayerIndex = 0;
+                    turnNumber++;
+                }
+                tries++;
+            } while (players[currentPlayerIndex].eliminated && tries <= players.length);
+        }
+
+        function allPlayersOut() {
+            return players.every(p => p.eliminated);
+        }
+
+        function revealAllSlots() {
+            for (let i = 0; i < secretNumber.length; i++) {
+                const slot = document.getElementById("slot" + i);
+                if (slot) slot.textContent = secretNumber[i];
+            }
+        }
+
+        function revealAnswer() {
+            if (!secretNumber || gameOver) return;
+            if (!confirm("Reveal the answer and end the game?")) return;
+
+            gameOver = true;
+            revealAllSlots();
+            setStatus(`Answer revealed: ${secretNumber}`, "lose");
+            renderPlayersBoard();
+        }
+
+        function skipTurn() {
+            if (gameOver) return;
+            guessInput.value = "";
+            nextPlayer();
+            updateUI();
+            setStatus("Turn skipped.");
+        }
+
+        function shufflePlayersOrder() {
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+
+            currentPlayerIndex = 0;
+            saveScores();
+            renderPlayersBoard();
+            setStatus(`New turn order: ${players.map(p => p.name).join(" → ")}`);
+        }
+
+        function clearScores() {
+            players.forEach(p => {
+                p.score = 0;
+                p.wrongCount = 0;
+                p.eliminated = false;
+                p.wrongDigits = new Set();
+            });
+
+            currentPlayerIndex = 0;
+            saveScores();
+            renderPlayersBoard();
+            setStatus("Scoreboard refreshed! Fresh start.");
+        }
+
+        function updateUI() {
+            if (!players.length) return;
+
+            const player = players[currentPlayerIndex];
+
+            wrongInfo.textContent = `${player.wrongCount || 0} / ${maxWrongAllowed}`;
+            turnInfo.textContent = turnNumber;
+            lengthInfo.textContent = digitLength;
+
+            renderPlayersBoard();
+        }
+
+        function newGame() {
+            startGame();
+        }
+
+        document.getElementById("generateInputsBtn").addEventListener("click", createNameInputs);
+        document.getElementById("startPlayersBtn").addEventListener("click", startGame);
+        document.getElementById("guessBtn").addEventListener("click", submitGuess);
+        document.getElementById("skipBtn").addEventListener("click", skipTurn);
+        document.getElementById("revealBtn").addEventListener("click", revealAnswer);
+        document.getElementById("newGameBtn").addEventListener("click", newGame);
+        document.getElementById("shuffleOrderBtn").addEventListener("click", shufflePlayersOrder);
+        document.getElementById("clearScoresBtn").addEventListener("click", clearScores);
+
+        guessInput.addEventListener("keydown", e => {
+            if (e.key === "Enter") submitGuess();
+        });
+
+        window.addEventListener("load", () => {
+            loadScores();
+            playerCount.value = String(players.length);
+            createNameInputs();
+            createDigitButtons();
+            makeSecretSlots();
+            renderPlayersBoard();
+            setStatus("Enter player names, then press Start Game!");
+        });
+    </script>
+</body>
+
+</html>

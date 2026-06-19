@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neon Word Match Arena</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg1: #050816;
+            /* --bg2: #3e1e31; */
+            --bg2: #52846f;
+            
+            /* --bg2: #0f172a; */
+            --cyan: #00f5ff;
+            --pink: #ff3df2;
+            --purple: #8b5cf6;
+            --green: #39ff88;
+            --yellow: #ffe45e;
+            --red: #ff4d6d;
+            --text: #ecfeff;
+            --muted: #a5b4fc;
+            --glass: rgba(255, 255, 255, .09);
+            --border: rgba(255, 255, 255, .22);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(0, 245, 255, .22), transparent 28%),
+                radial-gradient(circle at 90% 20%, rgba(255, 61, 242, .18), transparent 30%),
+                linear-gradient(135deg, var(--bg1), var(--bg2));
+            overflow-x: hidden;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            opacity: .5;
+            filter: blur(2px);
+            animation: floatOrb 12s linear infinite;
+            pointer-events: none;
+        }
+
+        .orb:nth-child(1) {
+            width: 90px;
+            height: 90px;
+            left: 8%;
+            bottom: -120px;
+            background: var(--cyan);
+        }
+
+        .orb:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            left: 35%;
+            bottom: -120px;
+            background: var(--pink);
+            animation-delay: 2s;
+        }
+
+        .orb:nth-child(3) {
+            width: 110px;
+            height: 110px;
+            left: 72%;
+            bottom: -150px;
+            background: var(--purple);
+            animation-delay: 4s;
+        }
+
+        @keyframes floatOrb {
+            from {
+                transform: translateY(0);
+                opacity: .2;
+            }
+
+            to {
+                transform: translateY(-120vh);
+                opacity: 0;
+            }
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            width: min(1320px, 94%);
+            margin: 28px auto;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 34px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04));
+            box-shadow: 0 0 35px rgba(0, 245, 255, .25);
+            backdrop-filter: blur(18px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 4rem);
+            background: linear-gradient(90deg, var(--cyan), var(--pink), var(--yellow));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .title p {
+            color: #dbeafe;
+        }
+
+        .player-zone,
+        .stats,
+        .main-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .player-zone {
+            grid-template-columns: 1fr 1fr auto auto;
+            margin-bottom: 22px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(4, 1fr);
+            margin-bottom: 22px;
+        }
+
+        .main-grid {
+            grid-template-columns: 1.25fr .75fr;
+        }
+
+        .panel {
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            border-radius: 24px;
+            padding: 18px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .22);
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: .8rem;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: 9px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 14px 15px;
+            border-radius: 15px;
+            color: white;
+            background: rgba(15, 23, 42, .8);
+            border: 1px solid rgba(255, 255, 255, .18);
+            font-size: 1rem;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-weight: 900;
+            cursor: pointer;
+            color: white;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+        }
+
+        .pink {
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+        }
+
+        .green {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: #03120a;
+        }
+
+        .ghost {
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid var(--border);
+        }
+
+        .danger {
+            background: linear-gradient(135deg, var(--red), #991b1b);
+        }
+
+        .value {
+            font-size: 2.25rem;
+            font-weight: 900;
+            text-shadow: 0 0 18px rgba(0, 245, 255, .55);
+        }
+
+        .root-panel {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .root-word {
+            font-size: clamp(2.2rem, 7vw, 5rem);
+            font-weight: 1000;
+            letter-spacing: .2em;
+            text-shadow: 0 0 12px var(--cyan), 0 0 24px var(--pink);
+            word-break: break-word;
+        }
+
+        .time-wrap {
+            height: 15px;
+            background: rgba(255, 255, 255, .13);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 18px;
+        }
+
+        .time-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+            transition: .3s;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 1000;
+            margin-bottom: 15px;
+        }
+
+        .system-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 13px;
+        }
+
+        .system-card {
+            min-height: 108px;
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            background: rgba(15, 23, 42, .72);
+            box-shadow: 0 0 18px rgba(0, 245, 255, .11);
+        }
+
+        .system-card.hidden .system-word {
+            filter: blur(1px);
+            letter-spacing: .16em;
+            color: #93c5fd;
+        }
+
+        .system-card.matched {
+            background: linear-gradient(135deg, rgba(57, 255, 136, .28), rgba(0, 245, 255, .15));
+            border-color: rgba(57, 255, 136, .7);
+        }
+
+        .system-card.revealed {
+            background: linear-gradient(135deg, rgba(255, 228, 94, .24), rgba(255, 61, 242, .12));
+        }
+
+        .system-letter {
+            color: #c4b5fd;
+            font-weight: 900;
+            font-size: .82rem;
+            margin-bottom: 10px;
+        }
+
+        .system-word {
+            font-size: 1.2rem;
+            font-weight: 1000;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 16px;
+            font-weight: 900;
+            background: rgba(255, 255, 255, .1);
+        }
+
+        .message.success {
+            color: var(--green);
+        }
+
+        .message.error {
+            color: #fecaca;
+        }
+
+        .message.info {
+            color: #bfdbfe;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 70px;
+        }
+
+        .chip {
+            padding: 10px 13px;
+            border-radius: 999px;
+            font-weight: 900;
+        }
+
+        .match {
+            background: rgba(57, 255, 136, .22);
+            color: var(--green);
+            border: 1px solid rgba(57, 255, 136, .55);
+        }
+
+        .correct {
+            background: rgba(0, 245, 255, .18);
+            color: var(--cyan);
+            border: 1px solid rgba(0, 245, 255, .5);
+        }
+
+        .misspell {
+            background: rgba(255, 77, 109, .2);
+            color: #fecaca;
+            border: 1px solid rgba(255, 77, 109, .55);
+        }
+
+        .zero {
+            background: rgba(255, 255, 255, .13);
+            color: #ddd6fe;
+            border: 1px solid rgba(255, 255, 255, .3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: .9rem;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            text-align: left;
+        }
+
+        th {
+            color: var(--cyan);
+            background: rgba(0, 245, 255, .08);
+        }
+
+        .small-note {
+            color: #c7d2fe;
+            font-size: .88rem;
+            margin-top: 10px;
+        }
+
+        @media(max-width:950px) {
+
+            .header,
+            .player-zone,
+            .main-grid {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+        }
+
+        @media(max-width:520px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .root-word {
+                letter-spacing: .1em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone </div>
+    </a>
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+
+    <main class="app">
+        <header class="header">
+            <div class="title">
+                <h1> Word Match Arena</h1>
+                <p>Custom root-word logic with cumulative player scores.</p>
+            </div>
+            <button id="startBtn" class="btn primary">Start Game</button>
+        </header>
+
+        <section class="player-zone">
+            <div class="panel">
+                <div class="label">Add Player</div>
+                <input id="newPlayerInput" type="text" maxlength="20" placeholder="Type player name" />
+            </div>
+
+            <div class="panel">
+                <div class="label">Current Player</div>
+                <select id="playerSelect"></select>
+            </div>
+
+            <button id="addPlayerBtn" class="btn green">Add Player</button>
+            <button id="removePlayerBtn" class="btn danger">Remove Player</button>
+        </section>
+
+        <!-- <section class="stats">
+            <div class="panel">
+                <div class="label">Round Score</div>
+                <div id="score" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Player Total</div>
+                <div id="playerTotal" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Timer</div>
+                <div id="timer" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Matches</div>
+                <div id="matchCount" class="value">0</div>
+            </div>
+        </section> -->
+
+        <section class="panel root-panel">
+            <div class="label">Root Word</div>
+            <div id="rootWord" class="root-word">PRESS START</div>
+            <div class="small-note">Do not enter the root word itself. Root word = 0 points.</div>
+            <div class="time-wrap">
+                <div id="timeBar" class="time-bar"></div>
+            </div>
+        </section>
+
+        <section class="main-grid">
+            <div>
+                <section class="panel" style="margin-bottom:18px;">
+                    <div class="section-title">Hidden System Words</div>
+                    <div id="systemBoard" class="system-board"></div>
+                    <div class="small-note">
+                        Exact hidden match = 15 | Correct listed word = 2 | Root word = 0 | Weak word = 1
+                        <span style="color:var(--yellow)">⭐ Medium/Hard/Tough: +1 bonus per letter beyond 6 letters for correct
+                            words</span>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="section-title">Submitted Words</div>
+                    <div id="userWords" class="words"></div>
+                </section>
+            </div>
+
+            <div>
+                <section class="panel" style="margin-bottom:18px;">
+                    <div class="section-title">Enter Word</div>
+                    <div class="input-row">
+                        <input id="wordInput" type="text" placeholder="Type your word..." autocomplete="off" />
+                        <button id="submitBtn" class="btn pink">Submit</button>
+                    </div>
+
+                    <div id="message" class="message info">Add/select player, choose mode, then press Start Game.</div>
+
+                    <div class="actions">
+                        <select id="modeSelect">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="tough">Tough</option>
+                        </select>
+                        <button id="revealBtn" class="btn ghost">Reveal All</button>
+                        <button id="restartBtn" class="btn ghost">Restart</button>
+                    </div>
+                </section>
+
+                <section class="panel" style="margin-bottom:18px;">
+                    <div class="section-title">Player Scoreboard</div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Player</th>
+                                    <th>Total</th>
+                                    <th>Games</th>
+                                </tr>
+                            </thead>
+                            <tbody id="playersBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <!-- <div class="section-title">Round History</div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
+                                    <th>Mode</th>
+                                    <th>Root</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody"></tbody>
+                        </table>
+                    </div> -->
+                    <div class="actions">
+                        <button id="clearLeaderboardBtn" class="btn danger">Clear All Scores</button>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="panel">
+                <div class="label">Round Score</div>
+                <div id="score" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Player Total</div>
+                <div id="playerTotal" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Timer</div>
+                <div id="timer" class="value">0</div>
+            </div>
+
+            <div class="panel">
+                <div class="label">Matches</div>
+                <div id="matchCount" class="value">0</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ── Typo.js offline spell-checker (browser-ready Hunspell engine) ── -->
+    <script src="https://cdn.jsdelivr.net/npm/typo-js@1.2.3/typo.js"></script>
+
+    <script src="scriptwdf.js"></script>
+</body>
+
+</html>

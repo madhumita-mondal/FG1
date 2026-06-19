@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Rules Hub</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Trebuchet MS", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(255, 241, 118, .8), transparent 25%),
+                radial-gradient(circle at 90% 20%, rgba(255, 111, 183, .6), transparent 25%),
+                radial-gradient(circle at 50% 90%, rgba(0, 242, 254, .7), transparent 35%),
+                linear-gradient(135deg, #ffe0f3, #6bb8db, #0a6d82);
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+            padding: 24px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .25);
+            border: 3px solid rgba(255, 255, 255, .75);
+            animation: fadeDown .8s ease;
+        }
+
+        .header h1 {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            color: #fff;
+            text-shadow: 0 0 14px rgba(0, 0, 0, .35);
+        }
+
+        .header p {
+            margin-top: 8px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 22px;
+            align-items: center;
+        }
+
+        .rule-card {
+            background: rgba(255, 255, 255, .9);
+            border-radius: 25px;
+            padding: 24px 18px;
+            min-height: 150px;
+            text-align: center;
+            border: 4px solid rgba(255, 255, 255, .95);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+            animation: popUp .7s ease both;
+        }
+
+        .rule-card:nth-child(2) {
+            animation-delay: .08s;
+        }
+
+        .rule-card:nth-child(3) {
+            animation-delay: .16s;
+        }
+
+        .rule-card:nth-child(4) {
+            animation-delay: .24s;
+        }
+
+        .rule-card:nth-child(5) {
+            animation-delay: .32s;
+        }
+
+        .rule-card:nth-child(6) {
+            animation-delay: .40s;
+        }
+
+        .rule-card:nth-child(7) {
+            animation-delay: .48s;
+        }
+
+        .rule-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, .25);
+        }
+
+        .rule-card h2 {
+            color: #5b42f3;
+            font-size: 1.45rem;
+            margin-bottom: 18px;
+        }
+
+        .rule-btn,
+        .back-btn {
+            display: inline-block;
+            text-decoration: none;
+            font-weight: 900;
+            border-radius: 18px;
+            transition: .25s ease;
+        }
+
+        .rule-btn {
+            color: white;
+            padding: 13px 22px;
+            background: linear-gradient(135deg, #5b42f3, #ff2f92);
+            box-shadow: 0 8px 18px rgba(91, 66, 243, .28);
+        }
+
+        .rule-btn:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #ff2f92, #ff9f1c);
+        }
+
+        .back-wrap {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-btn {
+            color: white;
+            padding: 15px 28px;
+            background: linear-gradient(135deg, #ff2f92, #ff9f1c);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+            animation: pulse 1.8s infinite;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.06);
+        }
+
+        @keyframes popUp {
+            from {
+                opacity: 0;
+                transform: translateY(35px) scale(.92);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+            }
+
+            50% {
+                box-shadow: 0 0 28px rgba(255, 255, 255, .75);
+            }
+        }
+
+        @media(max-width:600px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .rule-card {
+                min-height: 130px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>📖 Game Rules Hub</h1>
+            <p>Select a game to view its rules</p>
+        </div>
+
+        <div class="rules-grid">
+
+            <div class="rule-card">
+                <h2>🔢 Number Path</h2>
+                <a href="numberpath-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>🧩 Box Puzzle </h2>
+                <a href="sliding-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>🔤 Word Game</h2>
+                <a href="wordmatch-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>💰 Math Monopoly</h2>
+                <a href="monopoly-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>🚓 Crook Chase</h2>
+                <a href="crook-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>🎯 Hangman </h2>
+                <a href="hangman-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+            <div class="rule-card">
+                <h2>⏰ Dashtime</h2>
+                <a href="dashtime-rules.html" class="rule-btn">View Rules</a>
+            </div>
+
+        </div>
+
+        <div class="back-wrap">
+            <a href="index.html#pick-your-game" class="back-btn">⬅ Back to Game Zone</a>
+        </div>
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashtime</title>
+    <link rel="stylesheet" href="gamezone.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg1: #ee8412;
+            --bg2: #385e4d;
+            --bg3: #a02810;
+            --bg4: #b6abb0;
+            --card: rgba(255, 255, 255, 0.18);
+            --card-border: rgba(255, 255, 255, 0.35);
+            --text: #17324d;
+            --dark: #1f2a44;
+            --white: #ffffff;
+            --green: #22c55e;
+            --red: #ef4444;
+            --blue: #2563eb;
+            --orange: #f97316;
+            --purple: #7c3aed;
+            --shadow: 0 14px 35px rgba(30, 41, 59, 0.22);
+            --radius: 24px;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.35), transparent 18%),
+                radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.25), transparent 16%),
+                radial-gradient(circle at 20% 85%, rgba(255, 255, 255, 0.22), transparent 18%),
+                linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg4), var(--bg3));
+            padding: 20px;
+        }
+
+        .wrap {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 20px 16px 10px;
+        }
+
+        .title {
+            font-size: clamp(2.2rem, 5vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: 1px;
+            /* color: white; */
+            text-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            animation: floaty 2.8s ease-in-out infinite;
+        }
+
+        .title span {
+            display: inline-block;
+            background: linear-gradient(90deg, #41efcf, #e6cc0b, #ffffff, #13ec30, #e17676);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 100%;
+            animation: shine 5s linear infinite;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            color: #fffdfd;
+            font-size: 1.02rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 340px 1fr 320px;
+            gap: 18px;
+            margin-top: 18px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 18px;
+        }
+
+        .panel h2 {
+            font-size: 1.15rem;
+            margin-bottom: 14px;
+            color: var(--dark);
+        }
+
+        .setup-row,
+        .row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        input,
+        select,
+        button {
+            font: inherit;
+        }
+
+        input,
+        select {
+            width: 100%;
+            border: none;
+            outline: none;
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            font-weight: 700;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+        }
+
+        button {
+            border: none;
+            outline: none;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #22c55e, #14b8a6);
+            color: white;
+            box-shadow: 0 10px 20px rgba(20, 184, 166, 0.28);
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #3b82f6, #7c3aed);
+            color: white;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.26);
+        }
+
+        .btn-orange {
+            background: linear-gradient(135deg, #fb923c, #ef4444);
+            color: white;
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-yellow {
+            background: linear-gradient(135deg, #facc15, #f97316);
+            color: white;
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.24);
+        }
+
+        .btn-soft {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1f2a44;
+            font-weight: 800;
+        }
+
+        .clock-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .turn-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            color: var(--purple);
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .clock-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .clock {
+            position: relative;
+            width: min(76vw, 420px);
+            height: min(76vw, 420px);
+            max-width: 420px;
+            max-height: 420px;
+            min-width: 250px;
+            min-height: 250px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(222, 86, 86, 0.86) 42%, rgba(233, 244, 255, 0.95) 100%);
+            border: 12px solid rgba(255, 255, 255, 0.85);
+            box-shadow:
+                0 18px 36px rgba(0, 0, 0, 0.18),
+                inset 0 0 0 8px rgba(139, 92, 246, 0.12),
+                inset 0 0 35px rgba(34, 197, 94, 0.08);
+            overflow: hidden;
+        }
+
+        .clock-face {
+            position: absolute;
+            inset: 16px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .center-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            background: var(--dark);
+            border: 4px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 12;
+            box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.16);
+        }
+
+        .hand {
+            position: absolute;
+            left: 50%;
+            bottom: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            border-radius: 999px;
+            z-index: 10;
+        }
+
+        .hour-hand {
+            width: 10px;
+            height: 28%;
+            background: linear-gradient(180deg, #1e293b, #334155);
+        }
+
+        .minute-hand {
+            width: 7px;
+            height: 38%;
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+        }
+
+        .tick {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border-radius: 999px;
+        }
+
+        .tick.small {
+            width: 2px;
+            height: 12px;
+            background: #334155;
+            opacity: 0.95;
+        }
+
+        .tick.big {
+            width: 6px;
+            height: 28px;
+            background: #6d3df2;
+            opacity: 0.95;
+        }
+
+        .number {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-weight: 900;
+            color: #24324d;
+            font-size: clamp(18px, 2.7vw, 30px);
+            text-shadow: 0 2px 0 rgba(255, 255, 255, 0.85);
+            z-index: 2;
+        }
+
+        .minute-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-size: clamp(10px, 1.5vw, 13px);
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45),
+                0 0 4px rgba (0, 0, 0, 0.18);
+            /* opacity: 0.95; */
+            z-index: 2;
+        }
+
+        .prompt-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+        }
+
+        .prompt-title {
+            font-size: 0.95rem;
+            color: #475569;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .prompt-time {
+            font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+            color: var(--orange);
+            font-weight: 900;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .answer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .message {
+            margin-top: 14px;
+            min-height: 60px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 14px;
+            font-weight: 800;
+            line-height: 1.4;
+            color: #24324d;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+        }
+
+        .score-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .score-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.88);
+            border-radius: 16px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .score-card.active {
+            outline: 3px solid rgba(34, 197, 94, 0.7);
+            transform: scale(1.01);
+        }
+
+        .player-name {
+            font-weight: 900;
+            color: #1f2a44;
+        }
+
+        .player-score {
+            font-weight: 900;
+            color: var(--blue);
+            font-size: 1.08rem;
+        }
+
+        .mini-note {
+            margin-top: 12px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.14);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            color: #334155;
+            font-weight: 900;
+            font-size: 0.88rem;
+            margin: 3px 4px 0 0;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 18px;
+            color: white;
+            font-weight: 800;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        @keyframes shine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 300% 50%;
+            }
+        }
+
+        @keyframes floaty {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        @media (max-width: 980px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls,
+            .answer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .clock {
+                width: min(82vw, 390px);
+                height: min(82vw, 390px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone </div>
+    </a>
+    <div class="wrap">
+        <div class="hero">
+            <div class="title"><span> ⏰ Dashtime</span></div>
+            <div class="subtitle">Shuffle the clock, guess the time, and win the points!</div>
+        </div>
+
+        <div class="grid">
+            <!-- LEFT PANEL -->
+            <section class="panel">
+                <h2>🎮 Game Setup</h2>
+
+                <div class="setup-row">
+                    <label for="playerCount">Number of Players</label>
+                    <select id="playerCount">
+                        <option value="1">1 Player</option>
+                        <option value="2" selected>2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4">4 Players</option>
+                        <option value="5">5 Player</option>
+                        <option value="6">6 Player </option>
+                        <option value="7">7 Players</option>
+                        <option value="8">8 Players</option>
+                        <option value="9">9 Players</option>
+                        <option value="10">10 Players</option>
+                    </select>
+                </div>
+
+                <div id="playerInputs"></div>
+
+                <div class="setup-row">
+                    <label for="roundCount">Rounds</label>
+                    <select id="roundCount">
+                        <option value="5">5 Rounds</option>
+                        <option value="8" selected>8 Rounds</option>
+                        <option value="10">10 Rounds</option>
+                        <option value="15">15 Rounds</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <button class="btn-main" id="startBtn">Start Game</button>
+                </div>
+
+                <div class="row">
+                    <button class="btn-soft" id="resetBtn">Reset Game</button>
+                </div>
+
+                <div class="mini-note">
+                    <span class="pill">+10 correct hour</span>
+                    <span class="pill">+10 correct minute</span>
+                    <span class="pill">+5 exact time bonus</span>
+                    <span class="pill">Turn based</span>
+                </div>
+            </section>
+
+            <!-- CENTER PANEL -->
+            <section class="panel clock-area">
+                <div class="turn-badge" id="turnLabel">Player Turn: Waiting...</div>
+
+                <div class="clock-wrap">
+                    <div class="clock" id="clock">
+                        <div class="clock-face" id="clockFace"></div>
+                        <div class="hand hour-hand" id="hourHand"></div>
+                        <div class="hand minute-hand" id="minuteHand"></div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+
+                <div class="prompt-box">
+                    <div class="prompt-title">What time is shown on the clock?</div>
+                    <div class="prompt-time" id="shownTimeText">Press Start Game</div>
+                </div>
+
+                <div class="answer-grid" style="width:100%;">
+                    <div class="row" style="margin-bottom:0;">
+                        <label for="answerHour">Choose Hour</label>
+                        <select id="answerHour"></select>
+                    </div>
+                    <div class="row" style="margin-bottom:0;">
+                        <label for="answerMinute">Choose Minute</label>
+                        <select id="answerMinute"></select>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-blue" id="shuffleBtn">🔀 Shuffle Clock</button>
+                    <button class="btn-orange" id="submitBtn">✅ Submit Answer</button>
+                    <button class="btn-yellow" id="nextBtn">➡ Next Turn</button>
+                    <button class="btn-soft" id="revealBtn">👀 Reveal Time</button>
+                </div>
+
+                <div class="message" id="messageBox">
+                    Welcome to Dashtime! Start the game and guess the time from the clock.
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL -->
+            <section class="panel">
+                <h2>🏆 Scoreboard</h2>
+                <div class="score-list" id="scoreList"></div>
+
+                <div class="message" style="margin-top:16px;">
+                    <div><strong>Round:</strong> <span id="roundInfo">0 / 0</span></div>
+                    <div style="margin-top:8px;"><strong>Status:</strong> <span id="statusInfo">Not started</span></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="footer-note">Made for little learners who want to master time in a fun way ✨</div>
+    </div>
+
+    <script>
+        const playerCountEl = document.getElementById("playerCount");
+        const playerInputsEl = document.getElementById("playerInputs");
+        const roundCountEl = document.getElementById("roundCount");
+        const startBtn = document.getElementById("startBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const revealBtn = document.getElementById("revealBtn");
+
+        const turnLabel = document.getElementById("turnLabel");
+        const shownTimeText = document.getElementById("shownTimeText");
+        const messageBox = document.getElementById("messageBox");
+        const scoreList = document.getElementById("scoreList");
+        const roundInfo = document.getElementById("roundInfo");
+        const statusInfo = document.getElementById("statusInfo");
+
+        const hourHand = document.getElementById("hourHand");
+        const minuteHand = document.getElementById("minuteHand");
+        const clock = document.getElementById("clock");
+        const clockFace = document.getElementById("clockFace");
+
+        const answerHour = document.getElementById("answerHour");
+        const answerMinute = document.getElementById("answerMinute");
+
+        const state = {
+            players: [],
+            currentPlayer: 0,
+            currentRound: 0,
+            totalRounds: 8,
+            started: false,
+            currentHour: 3,
+            currentMinute: 0,
+            answeredThisTurn: false,
+            revealedThisTurn: false
+        };
+
+        function buildPlayerInputs() {
+            const count = Number(playerCountEl.value);
+            playerInputsEl.innerHTML = "";
+
+            for (let i = 1; i <= count; i++) {
+                const row = document.createElement("div");
+                row.className = "setup-row";
+                row.innerHTML = `
+ <label for="player${i}">Player ${i} Name</label>
+ <input id="player${i}" type="text" value="Player ${i}" maxlength="18" />
+ `;
+                playerInputsEl.appendChild(row);
+            }
+        }
+
+        function buildSelects() {
+            answerHour.innerHTML = "";
+            answerMinute.innerHTML = "";
+
+            for (let h = 1; h <= 12; h++) {
+                const opt = document.createElement("option");
+                opt.value = h;
+                opt.textContent = h;
+                answerHour.appendChild(opt);
+            }
+
+            for (let m = 0; m < 60; m += 5) {
+                const opt = document.createElement("option");
+                opt.value = m;
+                opt.textContent = String(m).padStart(2, "0");
+                answerMinute.appendChild(opt);
+            }
+        }
+
+        function createClockFace() {
+            clockFace.innerHTML = "";
+
+            const faceSize = clockFace.clientWidth || 280;
+            const center = faceSize / 2;
+
+            const hourTickOuter = faceSize * 0.47;
+            const minuteTickOuter = faceSize * 0.47;
+
+            const hourTickLength = Math.max(18, faceSize * 0.07);
+            const minuteTickLength = Math.max(8, faceSize * 0.035);
+
+            const hourTickRadius = hourTickOuter - hourTickLength / 2;
+            const minuteTickRadius = minuteTickOuter - minuteTickLength / 2;
+
+            const numberRadius = faceSize * 0.33;
+            const minuteLabelRadius = faceSize * 0.44;
+
+            for (let i = 0; i < 60; i++) {
+                const isHour = i % 5 === 0;
+                const angleDeg = i * 6;
+                const angleRad = (angleDeg - 90) * Math.PI / 180;
+
+                const tick = document.createElement("div");
+                tick.className = "tick " + (isHour ? "big" : "small");
+
+                const radius = isHour ? hourTickRadius : minuteTickRadius;
+                const x = center + Math.cos(angleRad) * radius;
+                const y = center + Math.sin(angleRad) * radius;
+
+                tick.style.left = `${x}px`;
+                tick.style.top = `${y}px`;
+                tick.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
+
+                clockFace.appendChild(tick);
+            }
+
+            for (let n = 1; n <= 12; n++) {
+                const angle = (n * 30 - 90) * Math.PI / 180;
+                const x = center + Math.cos(angle) * numberRadius;
+                const y = center + Math.sin(angle) * numberRadius;
+
+                const num = document.createElement("div");
+                num.className = "number";
+                num.textContent = n;
+                num.style.left = `${x}px`;
+                num.style.top = `${y}px`;
+
+                clockFace.appendChild(num);
+            }
+
+            for (let m = 5; m < 60; m += 5) {
+                const angle = (m * 6 - 90) * Math.PI / 180;
+                const x = center + Math.cos(angle) * minuteLabelRadius;
+                const y = center + Math.sin(angle) * minuteLabelRadius;
+
+                const label = document.createElement("div");
+                label.className = "minute-label";
+                label.textContent = m;
+                label.style.left = `${x}px`;
+                label.style.top = `${y}px`;
+
+                clockFace.appendChild(label);
+            }
+        }
+
+        function randomTime() {
+            const hour = Math.floor(Math.random() * 12) + 1;
+            const minuteOptions = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+            const minute = minuteOptions[Math.floor(Math.random() * minuteOptions.length)];
+            return { hour, minute };
+        }
+
+        function setClock(hour, minute) {
+            state.currentHour = hour;
+            state.currentMinute = minute;
+
+            const minuteDeg = minute * 6;
+            const hourDeg = ((hour % 12) * 30) + (minute * 0.5);
+
+            minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+            hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+        }
+
+        function formatTime(hour, minute) {
+            return `${hour}:${String(minute).padStart(2, "0")}`;
+        }
+
+        function refreshScoreboard() {
+            scoreList.innerHTML = "";
+
+            state.players.forEach((player, index) => {
+                const card = document.createElement("div");
+                card.className = "score-card" + (index === state.currentPlayer && state.started ? " active" : "");
+                card.innerHTML = `
+ <div class="player-name">🌟 ${player.name}</div>
+ <div class="player-score">${player.score} pts</div>
+ `;
+                scoreList.appendChild(card);
+            });
+        }
+
+        function updateTurnUI() {
+            if (!state.started) {
+                turnLabel.textContent = "Player Turn: Waiting...";
+                roundInfo.textContent = `0 / ${state.totalRounds}`;
+                statusInfo.textContent = "Not started";
+                return;
+            }
+
+            const current = state.players[state.currentPlayer];
+            turnLabel.textContent = `Player Turn: ${current.name}`;
+            roundInfo.textContent = `${state.currentRound} / ${state.totalRounds}`;
+            statusInfo.textContent = state.answeredThisTurn ? "Answer submitted" : "Waiting for answer";
+        }
+
+        function getCurrentPlayer() {
+            return state.players[state.currentPlayer];
+        }
+
+        function startGame() {
+            const count = Number(playerCountEl.value);
+            const rounds = Number(roundCountEl.value);
+
+            state.players = [];
+            state.currentPlayer = 0;
+            state.currentRound = 1;
+            state.totalRounds = rounds;
+            state.started = true;
+            state.answeredThisTurn = false;
+            state.revealedThisTurn = false;
+
+            for (let i = 1; i <= count; i++) {
+                const name = document.getElementById(`player${i}`).value.trim() || `Player ${i}`;
+                state.players.push({
+                    name,
+                    score: 0
+                });
+            }
+
+            const time = randomTime();
+            setClock(time.hour, time.minute);
+            shownTimeText.textContent = "Look at the clock!";
+            messageBox.innerHTML = `🎉 Game started! <strong>${getCurrentPlayer().name}</strong>, press <strong>Submit Answer</strong> after choosing the time.`;
+
+            refreshScoreboard();
+            updateTurnUI();
+        }
+
+        function shuffleClock() {
+            if (!state.started) {
+                messageBox.textContent = "Start the game first.";
+                return;
+            }
+            if (state.answeredThisTurn) {
+                messageBox.textContent = "This turn is already completed. Press Next Turn.";
+                return;
+            }
+
+            const time = randomTime();
+            setClock(time.hour, time.minute);
+            shownTimeText.textContent = "New shuffled clock!";
+            messageBox.innerHTML = `🔀 Clock shuffled for <strong>${getCurrentPlayer().name}</strong>. Now choose the correct hour and minute.`;
+        }
+
+        function submitAnswer() {
+            if (!state.started) {
+                messageBox.textContent = "Start the game first.";
+                return;
+            }
+
+            if (state.answeredThisTurn) {
+                messageBox.textContent = "You already answered this turn. Press Next Turn.";
+                return;
+            }
+
+            const guessedHour = Number(answerHour.value);
+            const guessedMinute = Number(answerMinute.value);
+
+            let gained = 0;
+
+            if (guessedHour === state.currentHour) {
+                gained += 10;
+            }
+
+            if (guessedMinute === state.currentMinute) {
+                gained += 10;
+            }
+
+            if (guessedHour === state.currentHour && guessedMinute === state.currentMinute) {
+                gained += 5;
+            }
+
+            const player = getCurrentPlayer();
+            player.score += gained;
+            state.answeredThisTurn = true;
+
+            if (gained > 0) {
+                messageBox.innerHTML = `✅ <strong>${player.name}</strong> earned <strong>${gained} points</strong>! Time was <strong>${formatTime(state.currentHour, state.currentMinute)}</strong>.`;
+            } else {
+                messageBox.innerHTML = `❌ Oops! No points this time, <strong>${player.name}</strong>. The correct time was <strong>${formatTime(state.currentHour, state.currentMinute)}</strong>.`;
+            }
+
+            shownTimeText.textContent = formatTime(state.currentHour, state.currentMinute);
+            refreshScoreboard();
+            updateTurnUI();
+        }
+
+        function revealTime() {
+            if (!state.started) {
+                messageBox.textContent = "Start the game first.";
+                return;
+            }
+
+            shownTimeText.textContent = formatTime(state.currentHour, state.currentMinute);
+            state.revealedThisTurn = true;
+            messageBox.innerHTML = `👀 Revealed time: <strong>${formatTime(state.currentHour, state.currentMinute)}</strong>. You can still answer, but try not to peek next time!`;
+        }
+
+        function nextTurn() {
+            if (!state.started) {
+                messageBox.textContent = "Start the game first.";
+                return;
+            }
+
+            if (!state.answeredThisTurn) {
+                messageBox.textContent = "Submit the answer before going to the next turn.";
+                return;
+            }
+
+            const lastPlayer = state.currentPlayer === state.players.length - 1;
+
+            if (lastPlayer) {
+                state.currentRound++;
+            }
+
+            if (state.currentRound > state.totalRounds) {
+                endGame();
+                return;
+            }
+
+            state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
+            state.answeredThisTurn = false;
+            state.revealedThisTurn = false;
+
+            const time = randomTime();
+            setClock(time.hour, time.minute);
+            shownTimeText.textContent = "Look at the clock!";
+
+            messageBox.innerHTML = `➡ Next turn! Now it is <strong>${getCurrentPlayer().name}</strong>'s turn.`;
+            refreshScoreboard();
+            updateTurnUI();
+        }
+
+        function endGame() {
+            state.started = false;
+
+            const sorted = [...state.players].sort((a, b) => b.score - a.score);
+            const winner = sorted[0];
+            const isTie = sorted.length > 1 && sorted[0].score === sorted[1].score;
+
+            if (isTie) {
+                messageBox.innerHTML = `🏁 Game over! It is a <strong>tie</strong> with <strong>${winner.score} points</strong>! Great job everyone!`;
+            } else {
+                messageBox.innerHTML = `🏆 Game over! Winner: <strong>${winner.name}</strong> with <strong>${winner.score} points</strong>!`;
+            }
+
+            shownTimeText.textContent = "Game Finished";
+            updateTurnUI();
+            refreshScoreboard();
+            statusInfo.textContent = "Finished";
+        }
+
+        function resetGame() {
+            state.players = [];
+            state.currentPlayer = 0;
+            state.currentRound = 0;
+            state.totalRounds = Number(roundCountEl.value);
+            state.started = false;
+            state.currentHour = 3;
+            state.currentMinute = 0;
+            state.answeredThisTurn = false;
+            state.revealedThisTurn = false;
+
+            setClock(3, 0);
+            shownTimeText.textContent = "Press Start Game";
+            messageBox.textContent = "Welcome to Dashtime! Start the game and guess the time from the clock.";
+            scoreList.innerHTML = "";
+            updateTurnUI();
+        }
+
+        playerCountEl.addEventListener("change", buildPlayerInputs);
+        startBtn.addEventListener("click", startGame);
+        shuffleBtn.addEventListener("click", shuffleClock);
+        submitBtn.addEventListener("click", submitAnswer);
+        nextBtn.addEventListener("click", nextTurn);
+        revealBtn.addEventListener("click", revealTime);
+        resetBtn.addEventListener("click", resetGame);
+
+        window.addEventListener("resize", createClockFace);
+
+        buildPlayerInputs();
+        buildSelects();
+        createClockFace();
+        resetGame();
+    </script>
+</body>
+
+</html>

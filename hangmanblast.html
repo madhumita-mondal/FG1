@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hangman Blast Home</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg1: #041f3d;
+            --bg2: #063c6b;
+            --bg3: #00a8cc;
+            --green1: #00ff9d;
+            --blue1: #00c6ff;
+            --blue2: #0072ff;
+            --red1: #ff4d6d;
+            --red2: #ff1e56;
+            --white: #ffffff;
+            --text: #eafcff;
+            --muted: #b8e7f3;
+            --card: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.18);
+            --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            --glow-blue: 0 0 16px rgba(0, 198, 255, 0.55);
+            --glow-green: 0 0 16px rgba(0, 255, 157, 0.45);
+            --glow-red: 0 0 16px rgba(255, 30, 86, 0.45);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(0, 255, 157, 0.18), transparent 20%),
+                radial-gradient(circle at 80% 15%, rgba(0, 198, 255, 0.22), transparent 20%),
+                radial-gradient(circle at 50% 80%, rgba(255, 30, 86, 0.15), transparent 18%),
+                linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            overflow-x: hidden;
+        }
+
+        .bg-lines::before,
+        .bg-lines::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-lines::before {
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.25;
+        }
+
+        .bg-lines::after {
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 55%);
+            opacity: 0.4;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: min(1100px, 94%);
+            margin: 24px auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 28px 18px;
+            margin-bottom: 24px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.15), rgba(0, 255, 157, 0.12));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2.3rem, 6vw, 4rem);
+            letter-spacing: 1px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: var(--glow-blue), var(--glow-green);
+        }
+
+        .hero p {
+            margin: 14px auto 0;
+            max-width: 760px;
+            font-size: 1.05rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .game-card {
+            min-height: 360px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 0.22s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-6px) scale(1.015);
+        }
+
+        .word-card {
+            box-shadow: var(--shadow), var(--glow-green);
+        }
+
+        .number-card {
+            box-shadow: var(--shadow), var(--glow-blue);
+        }
+
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-card h2 {
+            margin: 8px 0 10px;
+            color: var(--white);
+            font-size: clamp(1.7rem, 3vw, 2.3rem);
+            text-shadow: var(--glow-blue);
+        }
+
+        .game-card p {
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .play-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 24px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 900;
+            transition: 0.18s ease;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        .word-btn {
+            background: linear-gradient(135deg, var(--green1), #00c76f);
+            color: #04253d;
+            box-shadow: 0 10px 24px rgba(0, 255, 157, 0.32), var(--glow-green);
+        }
+
+        .number-btn {
+            background: linear-gradient(135deg, var(--blue1), var(--blue2));
+            color: white;
+            box-shadow: 0 10px 24px rgba(0, 114, 255, 0.35), var(--glow-blue);
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #d8f6ff;
+            font-size: 0.98rem;
+            opacity: 0.95;
+        }
+
+        @media (max-width: 760px) {
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-card {
+                min-height: auto;
+            }
+
+            .wrap {
+                width: 95%;
+                margin: 16px auto 24px;
+            }
+
+            .hero {
+                border-radius: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone </div>
+    </a>
+
+    <div class="bg-lines"></div>
+
+    <div class="wrap">
+
+        <section class="hero">
+            <h1>Hangman Blast</h1>
+            <p>
+                Choose your game mode. Play the classic word guessing challenge
+                or try the number logic challenge with digit clues and points.
+            </p>
+        </section>
+
+        <section class="game-grid">
+
+            <div class="game-card word-card">
+                <div>
+                    <div class="icon">🎯</div>
+                    <h2>Word Hangman</h2>
+                    <p>
+                        Guess the hidden word one letter at a time.
+                        Correct letters earn points, wrong guesses add danger,
+                        and players compete for the highest score.
+                    </p>
+                </div>
+
+                <a href="hangmannew2.html" class="play-btn word-btn">
+                    Play Word Hangman
+                </a>
+            </div>
+
+            <div class="game-card number-card">
+                <div>
+                    <div class="icon">🔢</div>
+                    <h2>Number Hangman</h2>
+                    <p>
+                        Guess the secret number using clues.
+                        Find correct digits, correct positions,
+                        and win with smart logic and strategy.
+                    </p>
+                </div>
+
+                <a href="number-hangman.html" class="play-btn number-btn">
+                    Play Number Hangman
+                </a>
+            </div>
+
+        </section>
+
+        <div class="footer">
+            🏆 Multiplayer • Scoreboard • Logic • Strategy • Fun
+        </div>
+
+    </div>
+
+</body>
+
+</html>

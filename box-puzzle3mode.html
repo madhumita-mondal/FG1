@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sliding Puzzle IQ World</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        :root {
+            --bg1: #b7ef86;
+            --bg2: #7167e4;
+            --bg3: #03654b;
+            --text: #fff;
+            --muted: #d7e4ff;
+            --gold: #ffe9a8;
+            --panel: rgba(255, 255, 255, .08);
+            --panel-border: rgba(255, 255, 255, .16);
+            --shadow: 0 25px 60px rgba(0, 0, 0, .35);
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(55, 213, 248, .18), transparent 18%),
+                radial-gradient(circle at top right, rgba(255, 209, 243, .2), transparent 18%),
+                linear-gradient(180deg, var(--bg1), var(--bg2) 48%, var(--bg3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .home-shell {
+            width: min(100%, 980px);
+            border-radius: 30px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(4, 12, 60, .92), rgba(22, 56, 160, .88));
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: var(--shadow);
+        }
+
+        .top-banner {
+            text-align: center;
+            padding: 32px 20px 26px;
+            background: linear-gradient(180deg, rgba(2, 6, 40, .98), rgba(4, 12, 70, .92));
+            border-bottom: 3px solid rgba(132, 194, 255, .45);
+        }
+
+        .top-banner h1 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            background: linear-gradient(90deg, #fff7b2, #fff, #8ff7ff, #ffd1f3, #fff7b2);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: titleMove 4s linear infinite;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+
+        .home-area {
+            padding: 28px 22px 34px;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .mode-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 26px;
+            padding: 22px;
+            text-align: center;
+            box-shadow:
+                0 18px 40px rgba(0, 0, 0, .28),
+                inset 0 0 22px rgba(255, 255, 255, .06);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-6px);
+            box-shadow:
+                0 24px 50px rgba(0, 0, 0, .36),
+                0 0 28px rgba(255, 233, 168, .35);
+        }
+
+        .icon {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 16px;
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            background: linear-gradient(180deg, #fff7a8, #ffcc3d);
+            box-shadow: 0 0 24px rgba(255, 233, 168, .55);
+        }
+
+        .mode-card h2 {
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .mode-card p {
+            color: #d7e4ff;
+            font-size: .96rem;
+            line-height: 1.5;
+            min-height: 72px;
+        }
+
+        .badge {
+            display: inline-block;
+            margin: 14px 0;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #12869a, #c52695);
+            color: #fff;
+            font-weight: 900;
+            font-size: .88rem;
+        }
+
+        .play-btn {
+            display: inline-block;
+            margin-top: 8px;
+            text-decoration: none;
+            border-radius: 16px;
+            padding: 13px 28px;
+            font-size: 1rem;
+            font-weight: 900;
+            color: #0b1858;
+            background: linear-gradient(180deg, #fff4b8, #ffd86a);
+            box-shadow:
+                0 10px 22px rgba(0, 0, 0, .2),
+                inset 0 2px 6px rgba(255, 255, 255, .55);
+        }
+
+        .footer-note {
+            margin-top: 26px;
+            text-align: center;
+            color: #d7e4ff;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 20px;
+            padding: 14px 16px;
+        }
+
+        @keyframes titleMove {
+            to {
+                background-position: 300% center
+            }
+        }
+
+        @media(max-width:850px) {
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-card p {
+                min-height: auto;
+            }
+        }
+
+        @media(max-width:560px) {
+            body {
+                padding: 10px
+            }
+
+            .home-shell {
+                border-radius: 22px
+            }
+
+            .top-banner {
+                padding: 24px 14px 20px
+            }
+
+            .home-area {
+                padding: 18px 12px 22px
+            }
+
+            .mode-card {
+                padding: 18px;
+                border-radius: 22px
+            }
+
+            .icon {
+                width: 78px;
+                height: 78px;
+                font-size: 2.3rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone </div>
+    </a>
+
+    <div class="home-shell">
+        <div class="top-banner">
+            <h1>Sliding Puzzle IQ World</h1>
+            <p class="subtitle">
+                Choose a puzzle mode, slide the tiles, solve the challenge, and unlock your IQ score.
+            </p>
+        </div>
+
+        <div class="home-area">
+            <div class="mode-grid">
+
+                <div class="mode-card">
+                    <div class="icon"> 🧩 </div>
+                    <h2>Easy Number Sliding Puzzle</h2>
+                    <p>
+                        Arrange numbers 1-11 in correct order using classic sliding puzzle moves.
+                    </p>
+                    <!-- <span class="badge">Logic Mode</span><br> -->
+                    <a class="play-btn" href="box-puzzlen3.html">Play Mode</a>
+                </div>
+
+                <div class="mode-card">
+                    <div class="icon"> 🚀 </div>
+                    <h2>Medium Number Sliding Puzzle</h2>
+                    <p>
+                        Arrange numbers 1-15 in correct order using classic sliding puzzle moves.
+                    </p>
+                    <!-- <span class="badge">Word Mode</span><br> -->
+                    <a class="play-btn" href="box-puzzlen1.html">Play Mode</a>
+                </div>
+
+                <div class="mode-card">
+                    <div class="icon"> 🔥 </div>
+                    <h2>Row & Column Word Puzzle</h2>
+                    <p>
+                        Use row and column clues on each tile to place the message correctly.
+                    </p>
+                    <!-- <span class="badge">Metric Mode</span><br> -->
+                    <a class="play-btn" href="box-puzzlen5.html">Play Mode</a>
+                </div>
+
+            </div>
+
+            <div class="footer-note">
+                🏆 Complete puzzles to earn badges, stars, and IQ score rewards.
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

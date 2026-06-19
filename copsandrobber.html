@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crook Chase Setup</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            /* color: white; */
+            padding: 18px;
+            background:
+                radial-gradient(circle at top left, #ff4fd855, transparent 28%),
+                radial-gradient(circle at bottom right, #00d4ff55, transparent 30%),
+                linear-gradient(135deg, #0f172a, #312e81, #701a75);
+            overflow-x: hidden;
+        }
+
+        .wrap {
+            max-width: 1150px;
+            margin: auto
+        }
+
+        .hero {
+            text-align: center;
+            padding: 35px 20px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .25);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .3);
+            animation: pop .8s ease;
+        }
+
+        @keyframes pop {
+            from {
+                opacity: 0;
+                transform: translateY(30px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .18);
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 7vw, 5.5rem);
+            background: linear-gradient(90deg, #f472b6, #fb923c, #facc15, #22c55e, #06b6d4, #8b5cf6);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: shine 5s infinite linear, float 3s infinite ease-in-out;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 300%
+            }
+        }
+
+        @keyframes float {
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: rgb(135, 145, 150);
+            color: #111827;
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 7px;
+            background: linear-gradient(90deg, #ec4899, #f97316, #facc15, #22c55e, #06b6d4, #8b5cf6);
+        }
+
+        h2 {
+            margin-bottom: 14px
+        }
+
+        .field {
+            margin-bottom: 14px
+        }
+
+        label {
+            font-weight: 900;
+            display: block;
+            margin-bottom: 6px
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            border-radius: 14px;
+            border: 2px solid #dbeafe;
+            font-size: 1rem;
+        }
+
+        .names {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-weight: 900;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: .25s;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.02)
+        }
+
+        .start {
+            width: 100%;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #ec4899, #7c3aed, #2563eb);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, .35);
+        }
+
+        .rule {
+            padding: 13px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eff6ff, #fdf2f8);
+            margin-bottom: 10px;
+            border: 1px solid #dbeafe;
+        }
+
+        .status {
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 14px;
+            background: #fff7ed;
+            color: #c2410c;
+            font-weight: 800;
+            display: none;
+        }
+
+        @media(max-width:800px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+
+            .names {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <a href="index.html#pick-your-game" class="game-zone-wrap">
+            <div class="game-zone-inner">⚡ Game Zone </div>
+        </a>
+
+        <section class="hero">
+            <div class="badge">🎭 Mystery Role Chase</div>
+            <h1>Crook Chase</h1>
+            <p>Set up players, read the rules, then start the animated role game.</p>
+        </section>
+
+        <div class="grid">
+            <section class="card">
+                <h2>🎮 Game Setup</h2>
+
+                <div class="field">
+                    <label>Number of Players</label>
+                    <select id="playerCount">
+                        <option value="4">4 Players</option>
+                        <option value="5">5 Players</option>
+                        <option value="6">6 Players</option>
+                        <option value="7">7 Players</option>
+                        <option value="8">8 Players</option>
+                        <option value="9">9 Players</option>
+                        <option value="10">10 Players</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Starting Round</label>
+                    <select id="roundStart">
+                        <option value="1">Round 1</option>
+                        <option value="2">Round 2</option>
+                        <option value="3">Round 3</option>
+                        <option value="4">Round 4</option>
+                        <option value="5">Round 5</option>
+                    </select>
+                </div>
+
+                <div id="names" class="names"></div>
+
+                <button class="start" onclick="startGame()">🚀 Start Crook Chase</button>
+                <div id="status" class="status"></div>
+            </section>
+
+            <section class="card">
+                <h2>📜 Rules</h2>
+
+                <div class="rule">👮 Cops guess one Thief and one Robber.</div>
+                <div class="rule">🧑 Civilians get <b>+600</b> points every round.</div>
+                <div class="rule">👮 Cop correct both = <b>+500</b>, otherwise <b>+300</b>.</div>
+                <div class="rule">🕵️ Thief caught = <b>-500</b>, escaped = <b>-400</b>.</div>
+                <div class="rule">💰 Robber caught = <b>-600</b>, escaped = <b>-500</b>.</div>
+
+                <h2 style="margin-top:18px;">🔢 Role Distribution</h2>
+                <div class="rule"><b>4–6:</b> 1 Cop, 1 Thief, 1 Robber, rest Civilians</div>
+                <div class="rule"><b>7–8:</b> 2 Cops, 2 Thieves, 1 Robber, rest Civilians</div>
+                <div class="rule"><b>9–10:</b> 2 Cops, 2 Thieves, 2 Robbers, rest Civilians</div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const playerCount = document.getElementById("playerCount");
+        const namesBox = document.getElementById("names");
+
+        playerCount.addEventListener("change", buildNames);
+        buildNames();
+
+        function buildNames() {
+            const count = Number(playerCount.value);
+            namesBox.innerHTML = "";
+            for (let i = 0; i < count; i++) {
+                namesBox.innerHTML += `
+      <div class="field">
+        <label>Player ${i + 1}</label>
+        <input id="p${i}" placeholder="Enter name">
+      </div>
+    `;
+            }
+        }
+
+        function startGame() {
+            const count = Number(playerCount.value);
+            const names = [];
+
+            for (let i = 0; i < count; i++) {
+                const value = document.getElementById("p" + i).value.trim();
+                if (!value) {
+                    showStatus("Please enter all player names.");
+                    return;
+                }
+                names.push(value);
+            }
+
+            const unique = new Set(names.map(n => n.toLowerCase()));
+            if (unique.size !== names.length) {
+                showStatus("Player names must be unique.");
+                return;
+            }
+
+            localStorage.setItem("crookChaseSetup", JSON.stringify({
+                names: names,
+                round: Number(document.getElementById("roundStart").value)
+            }));
+
+            window.location.href = "crook-game.html";
+        }
+
+        function showStatus(msg) {
+            const box = document.getElementById("status");
+            box.style.display = "block";
+            box.textContent = msg;
+        }
+    </script>
+</body>
+
+</html>

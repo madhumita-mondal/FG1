@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crook Chase Game</title>
+  <link rel="stylesheet" href="gamezone.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg1: #0f172a;
+      --bg2: #312e81;
+      --bg3: #701a75;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --gold: #fbbf24;
+      --pink: #f472b6;
+      --red: #ef4444;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --orange: #fb923c;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .25);
+      --radius: 22px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      color: #fff;
+      padding: 16px;
+      background:
+        radial-gradient(circle at top left, rgba(244, 114, 182, .35), transparent 28%),
+        radial-gradient(circle at top right, rgba(6, 182, 212, .30), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(34, 197, 94, .22), transparent 28%),
+        linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: auto;
+    }
+
+    .game-shell {
+      background: rgba(255, 255, 255, .11);
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 30px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, .32);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 30px 18px 22px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .06));
+      border-bottom: 1px solid rgba(255, 255, 255, .14);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .17);
+      border: 1px solid rgba(255, 255, 255, .2);
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .game-title {
+      font-size: clamp(2.4rem, 7vw, 5.3rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 12px;
+      animation: floatTitle 4s ease-in-out infinite;
+    }
+
+    .title-word {
+      display: inline-block;
+      background: linear-gradient(270deg, #f472b6, #fb923c, #fbbf24, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rise .9s ease forwards, gradientMove 6s ease infinite;
+    }
+
+    .title-chase {
+      animation-delay: .2s
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(.9);
+        filter: blur(3px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0)
+      }
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
+    }
+
+    @keyframes floatTitle {
+      50% {
+        transform: translateY(-6px) scale(1.03)
+      }
+    }
+
+    .back-setup-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f97316, #ec4899, #7c3aed);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 900;
+      box-shadow: 0 12px 28px rgba(236, 72, 153, .35);
+      transition: .25s;
+    }
+
+    .back-setup-btn:hover {
+      transform: translateY(-3px) scale(1.04);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      color: var(--text);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      animation: cardPop .65s ease both;
+    }
+
+    @keyframes cardPop {
+      from {
+        opacity: 0;
+        transform: translateY(25px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .panel:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--pink), var(--orange), var(--gold), var(--green), var(--blue), var(--cyan), var(--pink));
+    }
+
+    .panel h2 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .panel p,
+    .panel label,
+    .panel li {
+      color: #374151;
+      line-height: 1.55;
+      font-size: .94rem;
+    }
+
+    .full-span {
+      grid-column: 1/-1;
+    }
+
+    .panel-head,
+    .guess-actions,
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .round-pill {
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #dbeafe, #fce7f3);
+      color: #111827;
+      font-weight: 900;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: .94rem;
+      padding: 12px 16px;
+      border-radius: 15px;
+      color: #fff;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, .28);
+    }
+
+    .success-btn {
+      background: linear-gradient(135deg, #16a34a, #14b8a6);
+      box-shadow: 0 10px 22px rgba(22, 163, 74, .25);
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #ef4444, #f97316);
+    }
+
+    .scoreboard {
+      margin-top: 10px;
+      overflow: auto;
+      border-radius: 15px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+    }
+
+    .scoreboard table {
+      width: 100%;
+      min-width: 350px;
+      border-collapse: collapse;
+    }
+
+    .scoreboard th,
+    .scoreboard td {
+      padding: 11px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .scoreboard th {
+      background: linear-gradient(135deg, #dbeafe, #fce7f3);
+    }
+
+    .score-positive {
+      color: #15803d;
+      font-weight: 900
+    }
+
+    .score-negative {
+      color: #dc2626;
+      font-weight: 900
+    }
+
+    .score-neutral {
+      color: #2563eb;
+      font-weight: 900
+    }
+
+    .coins-panel {
+      background: linear-gradient(135deg, #bfe8af, #fff7ed, #b98ca4);
+    }
+
+    .coins-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .coin-card {
+      perspective: 1000px;
+      min-height: 230px;
+    }
+
+    .coin-inner {
+      position: relative;
+      width: 100%;
+      min-height: 230px;
+      transition: transform .9s ease;
+      transform-style: preserve-3d;
+    }
+
+    .coin-card.flipped .coin-inner {
+      transform: rotateY(180deg);
+    }
+
+    .coin-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, .2);
+      aspect-ratio: 1/1;
+      overflow: hidden;
+    }
+
+    .coin-front {
+      background: radial-gradient(circle at 30% 30%, #fff7cc, #fbbf24 55%, #b45309);
+      color: #7c2d12;
+      border: 6px solid rgba(255, 255, 255, .42);
+      font-weight: 900;
+    }
+
+    .coin-back {
+      transform: rotateY(180deg);
+      border: 6px solid rgba(255, 255, 255, .24);
+    }
+
+    .cop-back {
+      background: linear-gradient(135deg, #2563eb, #06b6d4)
+    }
+
+    .civilian-back {
+      background: linear-gradient(135deg, #f59e0b, #f97316)
+    }
+
+    .thief-back {
+      background: linear-gradient(135deg, #7c3aed, #ec4899)
+    }
+
+    .robber-back {
+      background: linear-gradient(135deg, #ef4444, #f43f5e)
+    }
+
+    .coin-emoji {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    .coin-title {
+      font-size: 1rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .coin-names {
+      font-size: .82rem;
+      line-height: 1.25;
+      font-weight: 800;
+      max-height: 95px;
+      max-width: 90%;
+      overflow: auto;
+      word-break: break-word;
+    }
+
+    .coin-card.animating {
+      animation: spinBounce 1.2s ease;
+    }
+
+    @keyframes spinBounce {
+      0% {
+        transform: scale(.75) rotate(0deg);
+        opacity: 0
+      }
+
+      40% {
+        transform: scale(1.08) rotate(8deg);
+        opacity: 1
+      }
+
+      70% {
+        transform: scale(.96) rotate(-6deg)
+      }
+
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1
+      }
+    }
+
+    .guess-box {
+      margin-top: 14px;
+      padding: 15px;
+      background: linear-gradient(135deg, #f0fdf4, #eff6ff);
+      border-radius: 18px;
+      border: 1px solid #d1fae5;
+    }
+
+    .guess-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 13px;
+      border: 2px solid #dbeafe;
+      outline: none;
+      background: rgb(225, 34, 120);
+      color: #111827;
+      font-size: .95rem;
+    }
+
+    select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, .16);
+    }
+
+    .reveal-box {
+      margin-top: 10px;
+      padding: 15px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #fff7ed, #fdf2f8);
+      border: 1px solid #fed7aa;
+    }
+
+    .cards-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .role-card {
+      min-height: 155px;
+      border-radius: 20px;
+      padding: 16px;
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, .18);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: cardPop .5s ease both;
+    }
+
+    .role-civilian {
+      background: linear-gradient(135deg, #f59e0b, #f97316)
+    }
+
+    .role-cop {
+      background: linear-gradient(135deg, #2563eb, #06b6d4)
+    }
+
+    .role-thief {
+      background: linear-gradient(135deg, #7c3aed, #ec4899)
+    }
+
+    .role-robber {
+      background: linear-gradient(135deg, #ef4444, #f43f5e)
+    }
+
+    .status-box {
+      margin: 0 16px 16px;
+      padding: 14px 16px;
+      border-radius: 15px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .status-info {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe
+    }
+
+    .status-success {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0
+    }
+
+    .status-warning {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fdba74
+    }
+
+    .status-danger {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    @media(max-width:1050px) {
+      .main-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:850px) {
+      .coins-wrap {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .guess-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:560px) {
+      body {
+        padding: 10px
+      }
+
+      .hero {
+        padding: 24px 12px
+      }
+
+      .main-grid {
+        padding: 12px
+      }
+
+      .coins-wrap {
+        grid-template-columns: 1fr
+      }
+
+      .coin-card,
+      .coin-inner {
+        min-height: 220px
+      }
+
+      .coin-face {
+        min-height: 220px
+      }
+
+      .btn {
+        width: 100%
+      }
+
+      .panel-head,
+      .guess-actions,
+      .result-actions {
+        flex-direction: column;
+        align-items: stretch
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="game-shell">
+
+      <header class="hero">
+        <!-- <div class="hero-badge">🎭 Mystery Role Chase</div> -->s
+
+        <h1 class="game-title">
+          <span class="title-word">Crook</span>
+          <span class="title-word title-chase">Chase</span>
+        </h1>
+
+        <a href="copsandrobber.html" class="back-setup-btn">⬅ Back to Setup</a>
+      </header>
+
+      <div class="main-grid">
+
+        <section id="coinsSection" class="panel coins-panel full-span">
+          <h2>🪙 Role Coins Reveal</h2>
+          <p>
+            Only <strong>Cop</strong> and <strong>Civilian</strong> coins are revealed first.
+            Thief and Robber coins reveal after cop guesses.
+          </p>
+
+          <div class="coins-wrap">
+            <div class="coin-card" id="copCoinCard">
+              <div class="coin-inner">
+                <div class="coin-face coin-front">
+                  <div class="coin-emoji">🪙</div>
+                  <div class="coin-title">Mystery Coin</div>
+                  <div class="coin-names">Shuffling...</div>
+                </div>
+                <div class="coin-face coin-back cop-back">
+                  <div class="coin-emoji">👮</div>
+                  <div class="coin-title">Cop</div>
+                  <div class="coin-names" id="copCoinNames">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="coin-card" id="civilianCoinCard">
+              <div class="coin-inner">
+                <div class="coin-face coin-front">
+                  <div class="coin-emoji">🪙</div>
+                  <div class="coin-title">Mystery Coin</div>
+                  <div class="coin-names">Shuffling...</div>
+                </div>
+                <div class="coin-face coin-back civilian-back">
+                  <div class="coin-emoji">🧑</div>
+                  <div class="coin-title">Civilian</div>
+                  <div class="coin-names" id="civilianCoinNames">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="coin-card" id="thiefCoinCard">
+              <div class="coin-inner">
+                <div class="coin-face coin-front">
+                  <div class="coin-emoji">🪙</div>
+                  <div class="coin-title">Hidden Coin</div>
+                  <div class="coin-names">Reveal after round</div>
+                </div>
+                <div class="coin-face coin-back thief-back">
+                  <div class="coin-emoji">🕵️</div>
+                  <div class="coin-title">Thief</div>
+                  <div class="coin-names" id="thiefCoinNames">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="coin-card" id="robberCoinCard">
+              <div class="coin-inner">
+                <div class="coin-face coin-front">
+                  <div class="coin-emoji">🪙</div>
+                  <div class="coin-title">Hidden Coin</div>
+                  <div class="coin-names">Reveal after round</div>
+                </div>
+                <div class="coin-face coin-back robber-back">
+                  <div class="coin-emoji">💰</div>
+                  <div class="coin-title">Robber</div>
+                  <div class="coin-names" id="robberCoinNames">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="copGuessSection" class="panel">
+          <h2>🚓 Cop Guessing Zone</h2>
+          <p>Each cop chooses one thief guess and one robber guess.</p>
+
+          <div id="copGuessForms"></div>
+
+          <div class="guess-actions">
+            <button id="submitGuessesBtn" class="btn success-btn">✅ Submit Cop Guesses</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="margin-top:0;">
+            <h2>🏆 Scoreboard</h2>
+            <div class="round-pill">Round: <span id="roundNumber">0</span></div>
+          </div>
+
+          <div id="scoreboard"></div>
+
+          <div class="result-actions" style="margin-top:14px;">
+            <button id="nextRoundBtn" class="btn primary-btn">➡ Start Next Round</button>
+            <button id="resetGameBtn" class="btn danger-btn">🔄 Reset</button>
+          </div>
+        </section>
+
+        <section id="resultSection" class="panel full-span hidden">
+          <h2>🎉 Round Result</h2>
+          <div id="resultSummary"></div>
+          <div id="revealBoard"></div>
+        </section>
+
+      </div>
+
+      <div id="statusBox" class="status-box status-info">
+        Loading game...
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let players = [];
+    let gameRound = 0;
+
+    const rolePoints = {
+      civilian: 600,
+      copCorrect: 500,
+      copWrong: 300,
+      thiefCaught: -500,
+      thiefEscaped: -400,
+      robberCaught: -600,
+      robberEscaped: -500
+    };
+
+    const submitGuessesBtn = document.getElementById("submitGuessesBtn");
+    const nextRoundBtn = document.getElementById("nextRoundBtn");
+    const resetGameBtn = document.getElementById("resetGameBtn");
+
+    submitGuessesBtn.addEventListener("click", submitCopGuesses);
+    nextRoundBtn.addEventListener("click", nextRound);
+    resetGameBtn.addEventListener("click", resetGame);
+
+    loadSetupAndStart();
+
+    function loadSetupAndStart() {
+      const savedSetup = JSON.parse(localStorage.getItem("crookChaseSetup") || "null");
+
+      if (!savedSetup || !savedSetup.names || savedSetup.names.length < 4) {
+        showStatus("No setup found. Please go back and enter player names.", "warning");
+        document.getElementById("coinsSection").classList.add("hidden");
+        document.getElementById("copGuessSection").classList.add("hidden");
+        return;
+      }
+
+      players = savedSetup.names.map(name => ({
+        name,
+        totalPoints: 0,
+        role: ""
+      }));
+
+      gameRound = Number(savedSetup.round) || 1;
+      document.getElementById("roundNumber").textContent = gameRound;
+
+      startRound();
+    }
+
+    function startRound() {
+      assignRoles();
+      buildCopGuessForms();
+      setupCoinsForRound();
+      renderScoreboard();
+
+      document.getElementById("resultSection").classList.add("hidden");
+      document.getElementById("copGuessSection").classList.remove("hidden");
+
+      showStatus(`Round ${gameRound} started. Cop and Civilian coins are revealed.`, "success");
+    }
+
+    function assignRoles() {
+      const count = players.length;
+      let cops = 1;
+      let thieves = 1;
+      let robbers = 1;
+
+      if (count >= 7 && count <= 8) {
+        cops = 2;
+        thieves = 2;
+        robbers = 1;
+      } else if (count >= 9) {
+        cops = 2;
+        thieves = 2;
+        robbers = 2;
+      }
+
+      const civilians = count - cops - thieves - robbers;
+      const roles = [];
+
+      for (let i = 0; i < cops; i++) roles.push("cop");
+      for (let i = 0; i < thieves; i++) roles.push("thief");
+      for (let i = 0; i < robbers; i++) roles.push("robber");
+      for (let i = 0; i < civilians; i++) roles.push("civilian");
+
+      shuffleArray(roles);
+
+      players.forEach((player, index) => {
+        player.role = roles[index];
+      });
+    }
+
+    function setupCoinsForRound() {
+      const cops = players.filter(p => p.role === "cop").map(p => p.name);
+      const civilians = players.filter(p => p.role === "civilian").map(p => p.name);
+
+      document.getElementById("copCoinNames").innerHTML = cops.map(escapeHtml).join("<br>") || "-";
+      document.getElementById("civilianCoinNames").innerHTML = civilians.map(escapeHtml).join("<br>") || "-";
+      document.getElementById("thiefCoinNames").innerHTML = "Hidden until result";
+      document.getElementById("robberCoinNames").innerHTML = "Hidden until result";
+
+      const ids = ["copCoinCard", "civilianCoinCard", "thiefCoinCard", "robberCoinCard"];
+
+      ids.forEach(id => {
+        const card = document.getElementById(id);
+        card.classList.remove("flipped", "animating");
+        void card.offsetWidth;
+        card.classList.add("animating");
+      });
+
+      setTimeout(() => document.getElementById("copCoinCard").classList.add("flipped"), 250);
+      setTimeout(() => document.getElementById("civilianCoinCard").classList.add("flipped"), 550);
+    }
+
+    function revealHiddenCoinsAfterRound() {
+      const thieves = players.filter(p => p.role === "thief").map(p => p.name);
+      const robbers = players.filter(p => p.role === "robber").map(p => p.name);
+
+      document.getElementById("thiefCoinNames").innerHTML = thieves.map(escapeHtml).join("<br>") || "-";
+      document.getElementById("robberCoinNames").innerHTML = robbers.map(escapeHtml).join("<br>") || "-";
+
+      const thiefCard = document.getElementById("thiefCoinCard");
+      const robberCard = document.getElementById("robberCoinCard");
+
+      thiefCard.classList.remove("animating");
+      robberCard.classList.remove("animating");
+
+      void thiefCard.offsetWidth;
+      void robberCard.offsetWidth;
+
+      thiefCard.classList.add("animating");
+      robberCard.classList.add("animating");
+
+      setTimeout(() => thiefCard.classList.add("flipped"), 250);
+      setTimeout(() => robberCard.classList.add("flipped"), 550);
+    }
+
+    function buildCopGuessForms() {
+      const wrap = document.getElementById("copGuessForms");
+      wrap.innerHTML = "";
+
+      const cops = players.filter(player => player.role === "cop");
+
+      cops.forEach((cop, index) => {
+        const others = players.filter(player => player.name !== cop.name);
+
+        const section = document.createElement("div");
+        section.className = "guess-box";
+        section.innerHTML = `
+      <h3>Guess Form for ${escapeHtml(cop.name)}</h3>
+
+      <div class="guess-grid">
+        <div class="field">
+          <label>Who is the thief?</label>
+          <select id="thiefGuess_${index}">
+            <option value="">Select thief</option>
+            ${others.map(player => `<option value="${escapeAttr(player.name)}">${escapeHtml(player.name)}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Who is the robber?</label>
+          <select id="robberGuess_${index}">
+            <option value="">Select robber</option>
+            ${others.map(player => `<option value="${escapeAttr(player.name)}">${escapeHtml(player.name)}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+    `;
+
+        wrap.appendChild(section);
+      });
+    }
+
+    function submitCopGuesses() {
+      const cops = players.filter(player => player.role === "cop");
+      const guesses = [];
+
+      for (let i = 0; i < cops.length; i++) {
+        const thiefValue = document.getElementById(`thiefGuess_${i}`).value;
+        const robberValue = document.getElementById(`robberGuess_${i}`).value;
+
+        if (!thiefValue || !robberValue) {
+          showStatus(`Please complete guesses for ${cops[i].name}.`, "warning");
+          return;
+        }
+
+        if (thiefValue === robberValue) {
+          showStatus(`${cops[i].name} cannot choose the same player for thief and robber.`, "danger");
+          return;
+        }
+
+        guesses.push({
+          copName: cops[i].name,
+          thiefGuess: thiefValue,
+          robberGuess: robberValue
+        });
+      }
+
+      scoreRound(guesses);
+      renderScoreboard();
+      showResults(guesses);
+      revealHiddenCoinsAfterRound();
+
+      document.getElementById("resultSection").classList.remove("hidden");
+      document.getElementById("copGuessSection").classList.add("hidden");
+
+      showStatus("Cop guesses submitted. Hidden roles revealed!", "success");
+    }
+
+    function scoreRound(guesses) {
+      const actualThieves = players.filter(p => p.role === "thief").map(p => p.name);
+      const actualRobbers = players.filter(p => p.role === "robber").map(p => p.name);
+
+      const anyThiefCaught = guesses.some(g => actualThieves.includes(g.thiefGuess));
+      const anyRobberCaught = guesses.some(g => actualRobbers.includes(g.robberGuess));
+
+      players.forEach(player => {
+        if (player.role === "civilian") {
+          player.totalPoints += rolePoints.civilian;
+        }
+      });
+
+      guesses.forEach(guess => {
+        const cop = players.find(player => player.name === guess.copName);
+        const thiefCorrect = actualThieves.includes(guess.thiefGuess);
+        const robberCorrect = actualRobbers.includes(guess.robberGuess);
+
+        if (thiefCorrect && robberCorrect) {
+          cop.totalPoints += rolePoints.copCorrect;
+        } else {
+          cop.totalPoints += rolePoints.copWrong;
+        }
+      });
+
+      players.forEach(player => {
+        if (player.role === "thief") {
+          player.totalPoints += anyThiefCaught ? rolePoints.thiefCaught : rolePoints.thiefEscaped;
+        }
+
+        if (player.role === "robber") {
+          player.totalPoints += anyRobberCaught ? rolePoints.robberCaught : rolePoints.robberEscaped;
+        }
+      });
+    }
+
+    function showResults(guesses) {
+      const actualThieves = players.filter(p => p.role === "thief").map(p => p.name);
+      const actualRobbers = players.filter(p => p.role === "robber").map(p => p.name);
+
+      document.getElementById("resultSummary").innerHTML = `
+    <div class="reveal-box">
+      <h3>Round ${gameRound} Summary</h3>
+      <p><strong>Actual Thief/Thieves:</strong> ${actualThieves.map(escapeHtml).join(", ")}</p>
+      <p><strong>Actual Robber/Robbers:</strong> ${actualRobbers.map(escapeHtml).join(", ")}</p>
+
+      <p style="margin-top:8px;"><strong>Cop Guesses:</strong></p>
+      <ul style="padding-left:20px;margin-top:6px;">
+        ${guesses.map(guess => `
+          <li>
+            <strong>${escapeHtml(guess.copName)}</strong> guessed
+            Thief = <strong>${escapeHtml(guess.thiefGuess)}</strong>,
+            Robber = <strong>${escapeHtml(guess.robberGuess)}</strong>
+          </li>
+        `).join("")}
+      </ul>
+    </div>
+  `;
+
+      document.getElementById("revealBoard").innerHTML = `
+    <div class="cards-wrap">
+      ${players.map(player => `
+        <div class="role-card ${getRevealRoleCardClass(player.role)}">
+          <div>
+            <h3 style="color:#fff;margin:0 0 8px;">${escapeHtml(player.name)}</h3>
+            <p style="color:rgba(255,255,255,.95);"><strong>Role:</strong> ${capitalize(player.role)}</p>
+          </div>
+          <p style="color:rgba(255,255,255,.95);"><strong>Total:</strong> ${formatPoints(player.totalPoints)}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
+    }
+
+    function renderScoreboard() {
+      const board = document.getElementById("scoreboard");
+
+      board.className = "scoreboard";
+      board.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Total Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${players.map(player => `
+          <tr>
+            <td>${escapeHtml(player.name)}</td>
+            <td class="${getScoreClass(player.totalPoints)}">${formatPoints(player.totalPoints)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+    }
+
+    function nextRound() {
+      if (players.length === 0) {
+        showStatus("Set up the game first.", "warning");
+        return;
+      }
+
+      gameRound += 1;
+      document.getElementById("roundNumber").textContent = gameRound;
+
+      startRound();
+    }
+
+    function resetGame() {
+      localStorage.removeItem("crookChaseSetup");
+      window.location.href = "copsandrobber.html";
+    }
+
+    function getRevealRoleCardClass(role) {
+      if (role === "civilian") return "role-civilian";
+      if (role === "cop") return "role-cop";
+      if (role === "thief") return "role-thief";
+      if (role === "robber") return "role-robber";
+      return "";
+    }
+
+    function formatPoints(value) {
+      if (value > 0) return `+${value}`;
+      if (value < 0) return `${value}`;
+      return "0";
+    }
+
+    function getScoreClass(value) {
+      if (value > 0) return "score-positive";
+      if (value < 0) return "score-negative";
+      return "score-neutral";
+    }
+
+    function capitalize(word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }
+
+    function showStatus(message, type = "info") {
+      const box = document.getElementById("statusBox");
+
+      let className = "status-box status-info";
+      if (type === "success") className = "status-box status-success";
+      if (type === "warning") className = "status-box status-warning";
+      if (type === "danger") className = "status-box status-danger";
+
+      box.className = className;
+      box.innerHTML = message;
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+  </script>
+</body>
+
+</html>

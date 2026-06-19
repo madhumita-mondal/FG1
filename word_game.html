@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word Matching Game</title>
+    <link rel="stylesheet" href="gamezone.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --purple: #6d5dfc;
+            --blue: #46c2ff;
+            --pink: #ff8cc6;
+            --yellow: #ffd166;
+            --green: #22c55e;
+            --teal: #00b894;
+            --red: #ef4444;
+            --dark: #1f2937;
+            --muted: #64748b;
+            --white: rgba(255, 255, 255, 0.88);
+            --shadow: 0 18px 40px rgba(31, 41, 55, 0.16);
+            --soft-shadow: 0 10px 24px rgba(31, 41, 55, 0.09);
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            color: var(--dark);
+            background:
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.28), transparent 20%),
+                radial-gradient(circle at 90% 15%, rgba(255, 255, 255, 0.2), transparent 16%),
+                radial-gradient(circle at 20% 90%, rgba(255, 255, 255, 0.18), transparent 18%),
+                linear-gradient(135deg, var(--purple), var(--blue) 50%, var(--pink));
+            overflow-x: hidden;
+        }
+
+        .bubble-layer {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            animation: floatUp linear infinite;
+        }
+
+        .bubble:nth-child(1) {
+            left: 5%;
+            width: 60px;
+            height: 60px;
+            animation-duration: 15s;
+        }
+
+        .bubble:nth-child(2) {
+            left: 15%;
+            width: 24px;
+            height: 24px;
+            animation-duration: 11s;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(3) {
+            left: 28%;
+            width: 90px;
+            height: 90px;
+            animation-duration: 18s;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(4) {
+            left: 40%;
+            width: 34px;
+            height: 34px;
+            animation-duration: 12s;
+        }
+
+        .bubble:nth-child(5) {
+            left: 52%;
+            width: 70px;
+            height: 70px;
+            animation-duration: 16s;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(6) {
+            left: 64%;
+            width: 26px;
+            height: 26px;
+            animation-duration: 10s;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(7) {
+            left: 76%;
+            width: 100px;
+            height: 100px;
+            animation-duration: 19s;
+        }
+
+        .bubble:nth-child(8) {
+            left: 88%;
+            width: 36px;
+            height: 36px;
+            animation-duration: 13s;
+            animation-delay: 1s;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-120vh) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        .app-shell {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-card {
+            width: 100%;
+            max-width: 1240px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 30px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .app-header h1 {
+            margin: 0 0 8px;
+            font-size: 2.2rem;
+            color: white;
+            text-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-header p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1.1fr 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .panel {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: var(--soft-shadow);
+        }
+
+        .label {
+            font-size: 0.88rem;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .value {
+            font-size: 1.95rem;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .stat-purple {
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        }
+
+        .stat-blue {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+
+        .stat-pink {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+        }
+
+        select,
+        input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            padding: 14px 15px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.94);
+            outline: none;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.14);
+        }
+
+        .root-panel {
+            text-align: center;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #fff7ed, #fef3c7 50%, #fde68a);
+        }
+
+        .root-word {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            color: #7c3aed;
+            margin-bottom: 8px;
+            word-break: break-word;
+            text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .hint {
+            color: #6b7280;
+            font-size: 0.96rem;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .time-bar-wrap {
+            width: 100%;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .time-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+            transition: width 0.3s ease;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        .system-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 12px;
+        }
+
+        .system-card {
+            border-radius: 20px;
+            padding: 14px;
+            min-height: 102px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            animation: popIn 0.25s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .system-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .system-card.hidden {
+            background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+        }
+
+        .system-card.matched {
+            background: linear-gradient(135deg, #dcfce7, #86efac);
+            border-color: rgba(34, 197, 94, 0.4);
+            animation: winPulse 0.45s ease;
+        }
+
+        .system-card.revealed {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+
+        @keyframes winPulse {
+            0% {
+                transform: scale(0.94);
+            }
+
+            50% {
+                transform: scale(1.04);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .system-letter {
+            font-size: 0.84rem;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .system-word {
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            min-height: 26px;
+            color: #334155;
+        }
+
+        .system-card.matched .system-word {
+            color: #166534;
+        }
+
+        .system-card.revealed .system-word {
+            color: #92400e;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 13px 15px;
+            border-radius: 16px;
+            font-weight: 800;
+            line-height: 1.4;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04);
+        }
+
+        .message.info {
+            background: linear-gradient(135deg, #dbeafe, #c7d2fe);
+            color: #1d4ed8;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #166534;
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #b91c1c;
+        }
+
+        .bottom-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .user-words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 76px;
+        }
+
+        .word-chip {
+            padding: 10px 13px;
+            border-radius: 999px;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+            animation: chipDrop 0.22s ease;
+        }
+
+        @keyframes chipDrop {
+            from {
+                transform: translateY(-8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .word-chip.match {
+            background: linear-gradient(135deg, #dcfce7, #86efac);
+            color: #166534;
+        }
+
+        .word-chip.correct {
+            background: linear-gradient(135deg, #dbeafe, #93c5fd);
+            color: #075985;
+        }
+
+        .word-chip.misspell {
+            background: linear-gradient(135deg, #fee2e2, #fca5a5);
+            color: #991b1b;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 16px;
+            padding: 13px 18px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.08s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:hover {
+            opacity: 0.97;
+            box-shadow: 0 14px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .primary {
+            background: linear-gradient(135deg, #5b5cf0, #7c3aed);
+            color: white;
+        }
+
+        .accent {
+            background: linear-gradient(135deg, #00b894, #0f766e);
+            color: white;
+        }
+
+        .ghost {
+            background: linear-gradient(135deg, #ffffff, #f3f4f6);
+            color: #0f172a;
+            border: 1px solid #d1d5db;
+        }
+
+        .danger {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            color: white;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 0.92rem;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.8);
+        }
+
+        .leaderboard-table th {
+            background: rgba(219, 234, 254, 0.8);
+            color: #1e3a8a;
+            font-weight: 800;
+        }
+
+        .leaderboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mini-note {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 16px;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 20;
+            animation: confettiFall 850ms ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(120px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 980px) {
+
+            .top-grid,
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .app-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .root-word {
+                font-size: 2rem;
+                letter-spacing: 0.12em;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                font-size: 0.84rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone1</div>
+    </a>
+    <div class="bubble-layer">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <div class="app-shell">
+        <div class="app-card">
+            <header class="app-header">
+                <div>
+                    <h1>Word Matching Game</h1>
+                    <p>Easy and Medium now use simpler word choices for higher match chances.</p>
+                </div>
+                <button id="startBtn" class="btn primary">Start Game</button>
+            </header>
+
+            <section class="top-grid">
+                <div class="panel">
+                    <div class="label">Player Name</div>
+                    <input id="playerName" type="text" maxlength="20" placeholder="Enter your name" />
+                </div>
+
+                <div class="panel">
+                    <div class="label">Mode</div>
+                    <select id="modeSelect">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="tough">Tough</option>
+                    </select>
+                </div>
+
+                <div class="panel stat-purple">
+                    <div class="label">Score</div>
+                    <div id="score" class="value">0</div>
+                </div>
+
+                <div class="panel stat-blue">
+                    <div class="label">Timer</div>
+                    <div id="timer" class="value">0</div>
+                </div>
+
+                <div class="panel stat-pink">
+                    <div class="label">Matches</div>
+                    <div id="matchCount" class="value">0</div>
+                </div>
+            </section>
+
+            <section class="panel root-panel">
+                <div class="label">Root Word</div>
+                <div id="rootWord" class="root-word">PRESS START</div>
+                <div class="hint">Enter words one by one. Hidden system words reveal only when matched.</div>
+                <div class="time-bar-wrap">
+                    <div id="timeBar" class="time-bar"></div>
+                </div>
+            </section>
+
+            <section class="main-grid">
+                <div>
+                    <div class="panel" style="margin-bottom:18px;">
+                        <div class="section-title">Hidden System Words</div>
+                        <div id="systemBoard" class="system-board"></div>
+                        <div class="hint">
+                            Exact match = <strong>15 points</strong><br>
+                            Correct spelling but unmatched = <strong>2 points</strong><br>
+                            Obvious misspelling / bad input = <strong>1 point</strong>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="section-title">Your Submitted Words</div>
+                        <div id="userWords" class="user-words"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="panel" style="margin-bottom:18px;">
+                        <div class="section-title">Enter Your Word</div>
+                        <div class="input-row">
+                            <input id="wordInput" type="text" placeholder="Type a word..." autocomplete="off" />
+                            <button id="submitBtn" class="btn accent">Submit</button>
+                        </div>
+                        <div id="message" class="message info">Choose a mode, enter name, and press Start Game.</div>
+
+                        <div class="bottom-actions">
+                            <button id="revealBtn" class="btn ghost">Reveal All</button>
+                            <button id="restartBtn" class="btn ghost">Restart</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <div class="section-title" style="margin-bottom:0;">Local Leaderboard</div>
+                            <button id="clearLeaderboardBtn" class="btn danger">Clear Leaderboard</button>
+                        </div>
+                        <div style="margin-top:14px; overflow-x:auto;">
+                            <table class="leaderboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Score</th>
+                                        <th>Mode</th>
+                                        <th>Root</th>
+                                        <th>Matches</th>
+                                        <th>When</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mini-note">Scores are saved in this browser on this device.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const LEADERBOARD_KEY = "word_matching_game_leaderboard_v2";
+
+        const ROOT_POOL = {
+            easy: [
+                "garden", "planet", "market", "school", "friend", "family", "animal", "flower", "window", "paper",
+                "water", "light", "stone", "music", "story", "dream", "happy", "color", "green", "yellow",
+                "orange", "silver", "golden", "simple", "strong", "little", "early", "night", "world", "earth",
+                "river", "forest", "island", "travel", "people", "group", "team", "place", "house", "table",
+                "chair", "clock", "phone", "image", "sound", "voice", "beach", "smile", "candle", "button"
+            ],
+            medium: [
+                "teacher", "student", "library", "science", "history", "weather", "country", "culture", "project", "design",
+                "network", "system", "energy", "future", "growth", "change", "result", "impact", "create", "develop",
+                "process", "method", "object", "random", "signal", "search", "engine", "device", "memory", "digital",
+                "program", "language", "function", "control", "structure", "pattern", "analysis", "model", "feature", "service",
+                "product", "market", "finance", "account", "manage", "leader", "vision", "strategy", "balance", "picture"
+            ],
+            hard: [
+                "creative", "discover", "imagine", "analysis", "research", "solution", "algorithm", "database", "platform", "framework",
+                "architecture", "integration", "optimization", "evaluation", "prediction", "simulation", "automation", "intelligence", "innovation", "performance",
+                "computation", "processing", "transformation", "classification", "visualization", "representation", "interaction", "application", "development", "deployment",
+                "engineering", "technology", "mathematics", "statistics", "probability", "learning", "training", "testing", "validation", "scalability",
+                "efficiency", "accuracy", "complexity", "dimension", "gradient", "networking", "parallelism", "distribution", "synchronizing", "abstraction"
+            ],
+            tough: [
+                "education", "communication", "transformation", "implementation", "responsibility", "international", "collaboration", "organization", "optimization", "understanding",
+                "interpretation", "representation", "visualization", "experimentation", "computation", "architecture", "sustainability", "development", "engineering", "mathematics",
+                "probability", "statistics", "classification", "prediction", "automation", "integration", "deployment", "performance", "efficiency", "scalability",
+                "synchronization", "parallelization", "abstraction", "generalization", "approximation", "transmission", "comprehension", "innovation", "acceleration", "differentiation",
+                "identification", "modification", "configuration", "simulation", "evaluation", "generation", "adaptation", "iteration", "connectivity", "modernization"
+            ]
+        };
+
+        const MODE_TIME = {
+            easy: 90,
+            medium: 75,
+            hard: 65,
+            tough: 55
+        };
+
+        const WORD_BANK = {
+            a: {
+                easy: ["apple", "angel", "after", "again", "animal", "arrow"],
+                medium: ["answer", "active", "artist", "anchor", "around", "advice"],
+                hard: ["arrange", "ability", "amount", "ancient", "advance"],
+                tough: ["abstraction", "adaptation", "automation"]
+            },
+            b: {
+                easy: ["ball", "beach", "bird", "book", "bread", "button"],
+                medium: ["before", "bright", "basket", "banana", "better", "border"],
+                hard: ["balance", "budget", "brother", "battery", "benefit"],
+                tough: ["benchmark", "biological", "broadband"]
+            },
+            c: {
+                easy: ["cat", "cake", "chair", "clock", "cloud", "candy"],
+                medium: ["candle", "circle", "camera", "castle", "college", "credit"],
+                hard: ["crystal", "capture", "culture", "control", "custom"],
+                tough: ["classification", "computation", "configuration"]
+            },
+            d: {
+                easy: ["dog", "duck", "door", "dance", "dream", "drama"],
+                medium: ["design", "device", "danger", "detail", "double", "drawer"],
+                hard: ["diamond", "digital", "develop", "dynamic"],
+                tough: ["distribution", "differentiation", "deployment"]
+            },
+            e: {
+                easy: ["egg", "easy", "earth", "enter", "engine", "effect"],
+                medium: ["energy", "effort", "editor", "escape", "ending", "eager"],
+                hard: ["element", "enable", "evolve", "ethics"],
+                tough: ["evaluation", "experimentation", "efficiency"]
+            },
+            f: {
+                easy: ["fan", "fish", "farm", "flag", "flower", "friend"],
+                medium: ["family", "future", "forest", "feature", "famous", "flight"],
+                hard: ["finance", "formal", "format", "function"],
+                tough: ["framework", "federation", "forecasting"]
+            },
+            g: {
+                easy: ["game", "gift", "girl", "gold", "green", "gain"],
+                medium: ["garden", "group", "giant", "global", "gentle", "ground"],
+                hard: ["growth", "general", "gather", "galaxy"],
+                tough: ["generation", "governance", "generalization"]
+            },
+            h: {
+                easy: ["hat", "home", "hill", "happy", "house", "horse"],
+                medium: ["history", "health", "helper", "hidden", "handle", "holiday"],
+                hard: ["harvest", "harmony", "humanity", "honesty"],
+                tough: ["hypothesis", "hierarchy", "harmonization"]
+            },
+            i: {
+                easy: ["ice", "idea", "iron", "image", "island", "inside"],
+                medium: ["impact", "income", "invent", "invite", "intent", "imagine"],
+                hard: ["improve", "insight", "instant", "inform"],
+                tough: ["integration", "interpretation", "identification"]
+            },
+            j: {
+                easy: ["jam", "jar", "jet", "joke", "jump", "jewel"],
+                medium: ["jacket", "jungle", "junior", "journey", "joined", "joyful"],
+                hard: ["justice", "journal", "judgment"],
+                tough: ["jurisdiction", "justification"]
+            },
+            k: {
+                easy: ["key", "kite", "king", "knee", "kitchen", "kitten"],
+                medium: ["keeper", "kindly", "kernel", "kettle"],
+                hard: ["kingdom", "knowledge"],
+                tough: ["kinematics", "knowledgebase"]
+            },
+            l: {
+                easy: ["lamp", "leaf", "lion", "light", "little", "laugh"],
+                medium: ["leader", "lesson", "library", "launch", "layout", "lovely"],
+                hard: ["language", "legend", "liquid", "luxury"],
+                tough: ["localization", "leadership", "longitudinal"]
+            },
+            m: {
+                easy: ["map", "milk", "moon", "music", "magic", "market"],
+                medium: ["memory", "model", "method", "middle", "master", "moment"],
+                hard: ["modern", "manage", "manual", "muscle"],
+                tough: ["modernization", "mathematics", "measurement"]
+            },
+            n: {
+                easy: ["net", "nest", "nose", "nice", "night", "name"],
+                medium: ["nature", "network", "number", "notice", "normal", "nation"],
+                hard: ["native", "nurture", "notion", "nearby"],
+                tough: ["normalization", "navigation", "neuroscience"]
+            },
+            o: {
+                easy: ["oak", "oar", "oven", "open", "orange", "owner"],
+                medium: ["object", "option", "office", "origin", "online", "output"],
+                hard: ["operate", "overall", "obvious"],
+                tough: ["optimization", "organization", "orientation"]
+            },
+            p: {
+                easy: ["pan", "park", "pear", "paper", "plant", "planet"],
+                medium: ["people", "pattern", "picture", "power", "public", "parent"],
+                hard: ["process", "project", "product", "policy", "profit"],
+                tough: ["probability", "parallelization", "presentation"]
+            },
+            q: {
+                easy: ["queen", "quick", "quiet"],
+                medium: ["quality", "quest", "quote"],
+                hard: ["quantum", "question"],
+                tough: ["quantization", "qualification"]
+            },
+            r: {
+                easy: ["red", "rain", "road", "ring", "river", "robot"],
+                medium: ["reason", "result", "record", "reader", "region", "review"],
+                hard: ["research", "remote", "reward", "rescue"],
+                tough: ["representation", "responsibility", "regularization"]
+            },
+            s: {
+                easy: ["sun", "sand", "song", "star", "stone", "school"],
+                medium: ["story", "simple", "silver", "signal", "search", "summer"],
+                hard: ["service", "science", "system", "social", "sudden"],
+                tough: ["sustainability", "synchronization", "simulation"]
+            },
+            t: {
+                easy: ["top", "tree", "train", "table", "tiger", "travel"],
+                medium: ["teacher", "target", "ticket", "temple", "talent", "thread"],
+                hard: ["testing", "theory", "toward", "tunnel"],
+                tough: ["transformation", "transmission", "technology"]
+            },
+            u: {
+                easy: ["use", "unit", "under", "uncle", "unique", "urban"],
+                medium: ["update", "useful", "urgent", "united", "uplift"],
+                hard: ["utility", "utmost"],
+                tough: ["understanding", "unification"]
+            },
+            v: {
+                easy: ["van", "vase", "vine", "value", "voice", "vision"],
+                medium: ["victory", "vector", "velvet", "village", "visual"],
+                hard: ["verify", "varied", "volume"],
+                tough: ["visualization", "verification"]
+            },
+            w: {
+                easy: ["wall", "wave", "wind", "water", "window", "world"],
+                medium: ["wonder", "writer", "worker", "winter", "weekly", "worthy"],
+                hard: ["wealth", "wisdom", "warmth", "whisper"],
+                tough: ["workforce", "warehousing"]
+            },
+            x: {
+                easy: ["xray"],
+                medium: ["xenon"],
+                hard: ["xylitol"],
+                tough: ["xenophobia"]
+            },
+            y: {
+                easy: ["yard", "yarn", "yellow", "young", "youth"],
+                medium: ["yearly", "yonder", "yogurt"],
+                hard: ["yielding"],
+                tough: ["yesteryear"]
+            },
+            z: {
+                easy: ["zebra", "zero", "zonal"],
+                medium: ["zenith", "zigzag"],
+                hard: ["zealous"],
+                tough: ["zoological"]
+            }
+        };
+
+        const FALLBACK_DICTIONARY = new Set([
+            "apple", "angel", "after", "again", "animal", "arrow", "answer", "active", "artist", "anchor", "around", "advice",
+            "ball", "beach", "bird", "book", "bread", "button", "before", "bright", "basket", "banana", "better", "border",
+            "cat", "cake", "chair", "clock", "cloud", "candy", "candle", "circle", "camera", "castle", "college", "credit",
+            "dog", "duck", "door", "dance", "dream", "drama", "design", "device", "danger", "detail", "double", "drawer",
+            "egg", "easy", "earth", "enter", "engine", "effect", "energy", "effort", "editor", "escape", "ending", "eager",
+            "fan", "fish", "farm", "flag", "flower", "friend", "family", "future", "forest", "feature", "famous", "flight",
+            "game", "gift", "girl", "gold", "green", "gain", "garden", "group", "giant", "global", "gentle", "ground",
+            "hat", "home", "hill", "happy", "house", "horse", "history", "health", "helper", "hidden", "handle", "holiday",
+            "ice", "idea", "iron", "image", "island", "inside", "impact", "income", "invent", "invite", "intent", "imagine",
+            "jam", "jar", "jet", "joke", "jump", "jewel", "jacket", "jungle", "junior", "journey", "joined", "joyful",
+            "key", "kite", "king", "knee", "kitchen", "kitten", "keeper", "kindly", "kernel", "kettle",
+            "lamp", "leaf", "lion", "light", "little", "laugh", "leader", "lesson", "library", "launch", "layout", "lovely",
+            "map", "milk", "moon", "music", "magic", "market", "memory", "model", "method", "middle", "master", "moment",
+            "net", "nest", "nose", "nice", "night", "name", "nature", "network", "number", "notice", "normal", "nation",
+            "oak", "oar", "oven", "open", "orange", "owner", "object", "option", "office", "origin", "online", "output",
+            "pan", "park", "pear", "paper", "plant", "planet", "people", "pattern", "picture", "power", "public", "parent",
+            "queen", "quick", "quiet", "quality", "quest", "quote",
+            "red", "rain", "road", "ring", "river", "robot", "reason", "result", "record", "reader", "region", "review",
+            "sun", "sand", "song", "star", "stone", "school", "story", "simple", "silver", "signal", "search", "summer",
+            "top", "tree", "train", "table", "tiger", "travel", "teacher", "target", "ticket", "temple", "talent", "thread",
+            "use", "unit", "under", "uncle", "unique", "urban", "update", "useful", "urgent", "united", "uplift",
+            "van", "vase", "vine", "value", "voice", "vision", "victory", "vector", "velvet", "village", "visual",
+            "wall", "wave", "wind", "water", "window", "world", "wonder", "writer", "worker", "winter", "weekly", "worthy",
+            "xray", "xenon", "yard", "yarn", "yellow", "young", "youth", "yearly", "yonder", "yogurt",
+            "zebra", "zero", "zonal", "zenith", "zigzag",
+            "creative", "discover", "imagine", "analysis", "research", "solution", "algorithm", "database", "platform", "framework",
+            "architecture", "integration", "optimization", "evaluation", "prediction", "simulation", "automation", "intelligence", "innovation", "performance",
+            "computation", "processing", "transformation", "classification", "visualization", "representation", "interaction", "application", "development", "deployment",
+            "engineering", "technology", "mathematics", "statistics", "probability", "learning", "training", "testing", "validation", "scalability",
+            "efficiency", "accuracy", "complexity", "dimension", "gradient", "networking", "parallelism", "distribution", "abstraction",
+            "education", "communication", "implementation", "responsibility", "international", "collaboration", "organization", "understanding", "interpretation",
+            "experimentation", "sustainability", "synchronization", "parallelization", "generalization", "approximation", "transmission", "comprehension",
+            "acceleration", "differentiation", "identification", "modification", "configuration", "generation", "adaptation", "iteration", "connectivity", "modernization"
+        ]);
+
+        const playerNameEl = document.getElementById("playerName");
+        const modeSelect = document.getElementById("modeSelect");
+        const startBtn = document.getElementById("startBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        const revealBtn = document.getElementById("revealBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const clearLeaderboardBtn = document.getElementById("clearLeaderboardBtn");
+
+        const rootWordEl = document.getElementById("rootWord");
+        const scoreEl = document.getElementById("score");
+        const timerEl = document.getElementById("timer");
+        const matchCountEl = document.getElementById("matchCount");
+        const systemBoardEl = document.getElementById("systemBoard");
+        const wordInputEl = document.getElementById("wordInput");
+        const messageEl = document.getElementById("message");
+        const userWordsEl = document.getElementById("userWords");
+        const timeBarEl = document.getElementById("timeBar");
+        const leaderboardBody = document.getElementById("leaderboardBody");
+
+        let lastRootByMode = { easy: "", medium: "", hard: "", tough: "" };
+        let scoreSavedForCurrentRound = false;
+
+        let game = {
+            started: false,
+            mode: "medium",
+            root: "",
+            systemWords: [],
+            score: 0,
+            timeLeft: 0,
+            maxTime: 0,
+            timerId: null,
+            usedWords: new Set(),
+            matchedIndices: new Set(),
+            revealAllActive: false
+        };
+
+        function setMessage(text, type = "info") {
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+
+        function normalize(word) {
+            return word.trim().toLowerCase();
+        }
+
+        function hideMask(word) {
+            return "•".repeat(word.length);
+        }
+
+        function getUniqueLetters(word) {
+            return [...new Set(word.toLowerCase().split(""))];
+        }
+
+        function pickRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function updateStats() {
+            scoreEl.textContent = game.score;
+            timerEl.textContent = game.timeLeft;
+            matchCountEl.textContent = game.matchedIndices.size;
+            const pct = game.maxTime ? Math.max(0, (game.timeLeft / game.maxTime) * 100) : 0;
+            timeBarEl.style.width = pct + "%";
+        }
+
+        function stopTimer() {
+            if (game.timerId) {
+                clearInterval(game.timerId);
+                game.timerId = null;
+            }
+        }
+
+        function generateSystemWords(root, mode) {
+            const letters = getUniqueLetters(root);
+            const usedWords = new Set();
+            const systemWords = [];
+
+            letters.forEach(letter => {
+                const bank = WORD_BANK[letter] || {};
+                let candidates = [];
+
+                if (mode === "easy") {
+                    candidates = [...(bank.easy || []), ...(bank.medium || [])];
+                } else if (mode === "medium") {
+                    candidates = [...(bank.easy || []), ...(bank.medium || []), ...(bank.hard || [])];
+                } else if (mode === "hard") {
+                    candidates = [...(bank.medium || []), ...(bank.hard || [])];
+                } else {
+                    candidates = [...(bank.hard || []), ...(bank.tough || [])];
+                }
+
+                if (!candidates.length) candidates = ["word"];
+
+                let chosen = null;
+                for (let i = 0; i < 20; i++) {
+                    const candidate = pickRandom(candidates);
+                    if (!usedWords.has(candidate)) {
+                        chosen = candidate;
+                        break;
+                    }
+                }
+
+                if (!chosen) chosen = pickRandom(candidates);
+
+                usedWords.add(chosen);
+                systemWords.push({
+                    letter: letter.toUpperCase(),
+                    word: chosen.toLowerCase()
+                });
+            });
+
+            return systemWords;
+        }
+
+        function renderSystemBoard() {
+            systemBoardEl.innerHTML = "";
+
+            game.systemWords.forEach((item, index) => {
+                const card = document.createElement("div");
+                card.className = "system-card";
+
+                const isMatched = game.matchedIndices.has(index);
+                const isRevealed = game.revealAllActive && !isMatched;
+
+                if (isMatched) card.classList.add("matched");
+                else if (isRevealed) card.classList.add("revealed");
+                else card.classList.add("hidden");
+
+                const letter = document.createElement("div");
+                letter.className = "system-letter";
+                letter.textContent = `Letter: ${item.letter}`;
+
+                const word = document.createElement("div");
+                word.className = "system-word";
+                word.textContent = (isMatched || isRevealed) ? item.word.toUpperCase() : hideMask(item.word);
+
+                card.appendChild(letter);
+                card.appendChild(word);
+                systemBoardEl.appendChild(card);
+            });
+        }
+
+        function addUserChip(word, type, points) {
+            const chip = document.createElement("div");
+            chip.className = `word-chip ${type}`;
+            chip.textContent = `${word} +${points}`;
+            userWordsEl.prepend(chip);
+        }
+
+        function getAllowedStartingLetters() {
+            return getUniqueLetters(game.root);
+        }
+
+        function looksLikeObviousMisspelling(word) {
+            if (!/^[a-z]+$/i.test(word)) return true;
+            if (word.length < 2) return true;
+            if (/(.)\1\1/.test(word)) return true;
+            if (!/[aeiou]/i.test(word) && word.length > 4) return true;
+            return false;
+        }
+
+        function isCorrectSpelling(word) {
+            if (FALLBACK_DICTIONARY.has(word)) return true;
+            if (/^[a-z]+$/i.test(word) && word.length >= 3 && !looksLikeObviousMisspelling(word)) return true;
+            return false;
+        }
+
+        function findExactSystemMatch(word) {
+            return game.systemWords.findIndex((item, index) =>
+                item.word.toLowerCase() === word && !game.matchedIndices.has(index)
+            );
+        }
+
+        function pickRootForMode(mode) {
+            const pool = ROOT_POOL[mode];
+            let root = pickRandom(pool);
+
+            if (pool.length > 1) {
+                while (root === lastRootByMode[mode]) {
+                    root = pickRandom(pool);
+                }
+            }
+
+            lastRootByMode[mode] = root;
+            return root;
+        }
+
+        function launchConfetti(sourceEl) {
+            const rect = sourceEl.getBoundingClientRect();
+            const colors = ["#ff5ea8", "#ffd166", "#46c2ff", "#22c55e", "#7c3aed"];
+
+            for (let i = 0; i < 24; i++) {
+                const piece = document.createElement("div");
+                piece.className = "confetti";
+                piece.style.left = (rect.left + rect.width / 2 + (Math.random() * 80 - 40)) + "px";
+                piece.style.top = (rect.top + rect.height / 2) + "px";
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.transform = `translateY(0) rotate(${Math.random() * 360}deg)`;
+                piece.style.animationDuration = (650 + Math.random() * 300) + "ms";
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 1000);
+            }
+        }
+
+        function getPlayerName() {
+            const name = playerNameEl.value.trim();
+            return name || "Player";
+        }
+
+        function getLeaderboard() {
+            try {
+                const data = localStorage.getItem(LEADERBOARD_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveLeaderboard(list) {
+            localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list));
+        }
+
+        function formatDateTime(ts) {
+            const d = new Date(ts);
+            return d.toLocaleString();
+        }
+
+        function renderLeaderboard() {
+            const list = getLeaderboard();
+            leaderboardBody.innerHTML = "";
+
+            if (!list.length) {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td colspan="7">No scores yet.</td>`;
+                leaderboardBody.appendChild(row);
+                return;
+            }
+
+            list.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.name}</td>
+          <td>${item.score}</td>
+          <td>${item.mode}</td>
+          <td>${item.root}</td>
+          <td>${item.matches}</td>
+          <td>${formatDateTime(item.timestamp)}</td>
+        `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        function saveCurrentScore(reason = "") {
+            if (scoreSavedForCurrentRound) return;
+            if (!game.root) return;
+
+            const entry = {
+                name: getPlayerName(),
+                score: game.score,
+                mode: game.mode,
+                root: game.root,
+                matches: game.matchedIndices.size,
+                timestamp: Date.now(),
+                reason
+            };
+
+            const list = getLeaderboard();
+            list.push(entry);
+            list.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                if (b.matches !== a.matches) return b.matches - a.matches;
+                return a.timestamp - b.timestamp;
+            });
+
+            saveLeaderboard(list.slice(0, 10));
+            scoreSavedForCurrentRound = true;
+            renderLeaderboard();
+        }
+
+        function startGame() {
+            stopTimer();
+
+            const mode = modeSelect.value;
+            const root = pickRootForMode(mode);
+            const systemWords = generateSystemWords(root, mode);
+
+            game.started = true;
+            game.mode = mode;
+            game.root = root.toUpperCase();
+            game.systemWords = systemWords;
+            game.score = 0;
+            game.timeLeft = MODE_TIME[mode];
+            game.maxTime = MODE_TIME[mode];
+            game.usedWords = new Set();
+            game.matchedIndices = new Set();
+            game.revealAllActive = false;
+            scoreSavedForCurrentRound = false;
+
+            rootWordEl.textContent = game.root;
+            userWordsEl.innerHTML = "";
+            wordInputEl.value = "";
+
+            renderSystemBoard();
+            updateStats();
+            setMessage("Game started. Easy and Medium now use easier hidden words.", "info");
+
+            game.timerId = setInterval(() => {
+                game.timeLeft--;
+
+                if (game.timeLeft <= 0) {
+                    game.timeLeft = 0;
+                    updateStats();
+                    stopTimer();
+                    endGame();
+                    return;
+                }
+
+                updateStats();
+            }, 1000);
+
+            wordInputEl.focus();
+        }
+
+        function endGame() {
+            game.started = false;
+            game.revealAllActive = true;
+            renderSystemBoard();
+            saveCurrentScore("time_up");
+            setMessage(`Time is up. Final score: ${game.score}`, "error");
+        }
+
+        function submitWord() {
+            if (!game.started) {
+                setMessage("Start the game first.", "error");
+                return;
+            }
+
+            const raw = wordInputEl.value.trim();
+            const word = normalize(raw);
+
+            if (!word) {
+                setMessage("Please enter a word.", "error");
+                return;
+            }
+
+            if (!/^[a-zA-Z]+$/.test(raw)) {
+                setMessage("Use letters only.", "error");
+                return;
+            }
+
+            if (game.usedWords.has(word)) {
+                setMessage("You already entered this word.", "error");
+                return;
+            }
+
+            const allowedLetters = getAllowedStartingLetters();
+            if (!allowedLetters.includes(word[0])) {
+                setMessage(`Word must start with one of these letters: ${allowedLetters.join(", ").toUpperCase()}`, "error");
+                return;
+            }
+
+            game.usedWords.add(word);
+            const matchedIndex = findExactSystemMatch(word);
+
+            if (matchedIndex !== -1) {
+                game.matchedIndices.add(matchedIndex);
+                game.score += 15;
+                renderSystemBoard();
+                addUserChip(word, "match", 15);
+                updateStats();
+                setMessage(`Excellent! "${word}" matched a hidden word. +15 points`, "success");
+
+                const matchedCards = document.querySelectorAll(".system-card.matched");
+                const latest = matchedCards[matchedCards.length - 1];
+                if (latest) launchConfetti(latest);
+            } else if (isCorrectSpelling(word)) {
+                game.score += 2;
+                addUserChip(word, "correct", 2);
+                updateStats();
+                setMessage(`Correct word, but no match. +2 points`, "success");
+            } else {
+                game.score += 1;
+                addUserChip(word, "misspell", 1);
+                updateStats();
+                setMessage(`Spelling mistake or bad word pattern. +1 point`, "error");
+            }
+
+            wordInputEl.value = "";
+            wordInputEl.focus();
+
+            if (game.matchedIndices.size === game.systemWords.length) {
+                stopTimer();
+                game.started = false;
+                game.revealAllActive = true;
+                renderSystemBoard();
+                saveCurrentScore("all_matched");
+                setMessage(`Amazing! You matched all hidden words. Final score: ${game.score}`, "success");
+            }
+        }
+
+        function revealAll() {
+            if (!game.root) {
+                setMessage("Start the game first.", "error");
+                return;
+            }
+
+            stopTimer();
+            game.started = false;
+            game.revealAllActive = true;
+            renderSystemBoard();
+            saveCurrentScore("revealed");
+            setMessage(`All system words revealed. Final score: ${game.score}`, "info");
+        }
+
+        function clearLeaderboard() {
+            localStorage.removeItem(LEADERBOARD_KEY);
+            renderLeaderboard();
+            setMessage("Leaderboard cleared.", "info");
+        }
+
+        startBtn.addEventListener("click", startGame);
+        restartBtn.addEventListener("click", startGame);
+        revealBtn.addEventListener("click", revealAll);
+        submitBtn.addEventListener("click", submitWord);
+        clearLeaderboardBtn.addEventListener("click", clearLeaderboard);
+
+        wordInputEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") submitWord();
+        });
+
+        modeSelect.addEventListener("change", () => {
+            if (!game.started) {
+                rootWordEl.textContent = "PRESS START";
+                systemBoardEl.innerHTML = "";
+                userWordsEl.innerHTML = "";
+                scoreEl.textContent = "0";
+                timerEl.textContent = "0";
+                matchCountEl.textContent = "0";
+                timeBarEl.style.width = "100%";
+                setMessage("Mode changed. Press Start Game.", "info");
+            }
+        });
+
+        renderLeaderboard();
+        updateStats();
+    </script>
+</body>
+    
+</html>

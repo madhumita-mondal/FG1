@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sliding IQ Puzzle</title>
+    <link rel="stylesheet" href="gamezone.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        :root {
+            --bg1: #a5f39b;
+            --bg2: #67e2e4;
+            --bg3: #03654b;
+            --panel: rgba(225, 82, 82, 0.08);
+            --panel-border: rgba(255, 255, 255, 0.16);
+            --text: #ffffff;
+            --muted: #d7e4ff;
+            --gold: #ffe9a8;
+            --tile-border: #9cd8ff;
+            --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+            --glow: 0 0 20px rgba(123, 223, 255, 0.45);
+            --radius-lg: 26px;
+            --radius-md: 18px;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(55, 213, 248, 0.18), transparent 18%),
+                radial-gradient(circle at top right, rgba(55, 213, 248, 0.18), transparent 18%),
+                linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 48%, var(--bg3) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-shell {
+            width: min(100%, 920px);
+            border-radius: 30px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(4, 12, 60, 0.9), rgba(22, 56, 160, 0.88));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .top-banner {
+            text-align: center;
+            padding: 28px 20px 22px;
+            background: linear-gradient(180deg, rgba(2, 6, 40, 0.98), rgba(4, 12, 70, 0.92));
+            border-bottom: 3px solid rgba(132, 194, 255, 0.45);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-banner::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background: conic-gradient(from 0deg, rgba(255, 235, 151, 0.12), rgba(111, 243, 255, 0.1), rgba(255, 163, 228, 0.12), rgba(255, 235, 151, 0.12));
+            animation: bannerGlowSpin 8s linear infinite;
+            pointer-events: none;
+        }
+
+        .top-banner>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .top-banner h1 {
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 800;
+            text-transform: capitalize;
+            line-height: 1.2;
+            letter-spacing: 0.6px;
+            background: linear-gradient(90deg, #fff7b2 0%, #ffffff 20%, #8ff7ff 40%, #ffd1f3 60%, #fff7b2 80%, #ffffff 100%);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGradientMove 4s linear infinite, titleFloat 2.4s ease-in-out infinite;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .game-area {
+            padding: 26px 20px 30px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .score-panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .iq-box {
+            background: linear-gradient(180deg, #12869a, #c52695);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 22px;
+            padding: 22px 18px;
+            text-align: center;
+            box-shadow: inset 0 0 18px rgba(122, 220, 255, 0.12);
+        }
+
+        .iq-label {
+            display: block;
+            font-size: 1rem;
+            letter-spacing: 1.5px;
+            color: #cfe2ff;
+            margin-bottom: 10px;
+        }
+
+        .iq-value {
+            display: block;
+            font-size: clamp(2.2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: var(--gold);
+            text-shadow: 0 0 16px rgba(255, 233, 168, 0.25);
+        }
+
+        .stats {
+            margin-top: 18px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, rgba(130, 230, 255, 0.14), rgba(70, 133, 255, 0.14));
+            border: 1px solid rgba(165, 225, 255, 0.22);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card .label {
+            color: #d9ebff;
+            font-size: 0.95rem;
+        }
+
+        .stat-card span:last-child {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .controls {
+            margin-top: 18px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .controls button {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: #0b1858;
+            background: linear-gradient(180deg, #fff4b8, #ffd86a);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2), inset 0 2px 6px rgba(255, 255, 255, 0.55);
+            transition: transform .18s ease, filter .18s ease;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.04);
+        }
+
+        .controls button:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        .board-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board {
+            width: min(92vw, 540px);
+            aspect-ratio: 1 / 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 14px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(129, 196, 255, 0.38), rgba(40, 95, 223, 0.45));
+            border: 2px solid rgba(155, 228, 255, 0.34);
+            box-shadow: var(--shadow), inset 0 0 24px rgba(140, 230, 255, 0.18);
+        }
+
+        .tile {
+            border: 2px solid var(--tile-border);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(197, 248, 255, 0.98), rgba(101, 216, 255, 0.95));
+            color: #f9feff;
+            font-size: clamp(1.7rem, 4vw, 3rem);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.14), inset 0 -12px 18px rgba(47, 95, 217, 0.18), 0 10px 18px rgba(5, 20, 90, 0.28), var(--glow);
+            text-shadow: 0 2px 0 rgba(64, 110, 220, 0.6), 0 0 10px rgba(255, 255, 255, 0.45);
+            transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+        }
+
+        .tile:hover {
+            transform: translateY(-2px) scale(1.02);
+            filter: brightness(1.03);
+        }
+
+        .tile:active {
+            transform: scale(0.98);
+        }
+
+        .tile::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+            pointer-events: none;
+        }
+
+        .tile.empty {
+            background: linear-gradient(180deg, #0b1666, #08104b);
+            border: 2px solid rgba(95, 132, 255, 0.35);
+            box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.4), inset 0 0 0 3px rgba(255, 255, 255, 0.03);
+            cursor: default;
+        }
+
+        .tile.empty::before {
+            display: none;
+        }
+
+        .message-panel {
+            grid-column: 1 / -1;
+            margin-top: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 14px 16px;
+            text-align: center;
+            color: #eef6ff;
+            box-shadow: var(--shadow);
+        }
+
+        .win {
+            animation: winPulse 0.8s ease-in-out infinite alternate;
+        }
+
+        /* ══════════════════════════════════════════
+   GAME ZONE BUTTON — pixel-perfect match
+   Key details from image:
+   - Outer white ring with visible GAP/space
+   - Inner button: pink-left → orange-right gradient
+   - Moderately rounded corners (not full pill)
+   - Soft white outer glow behind the ring
+══════════════════════════════════════════ */
+        .game-zone-wrap {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 50;
+            /* white outer ring with gap achieved via outline + outline-offset */
+            border-radius: 28px;
+            padding: 2px;
+            /* gap between ring and button */
+            border: 3px solid rgba(255, 255, 255, .9);
+            background: linear-gradient(135deg, #ff2f92, #ff9f1c);
+            color: white;
+            /* the white ring itself */
+            box-shadow:
+                0 14px 30px rgba(0, 0, 0, .25),
+                0 0 25px rgba(255, 79, 135, .65);
+            animation: quickPulse 1.8s ease-in-out infinite;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        @keyframes quickPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
+        }
+
+        /* .game-zone {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 50;
+            border: 3px solid rgba(255, 255, 255, .9);
+            background: linear-gradient(135deg, #ff2f92, #ff9f1c);
+            color: white;
+            box-shadow:
+                0 14px 30px rgba(0, 0, 0, .25),
+                0 0 25px rgba(255, 79, 135, .65);
+            animation: quickPulse 1.8s ease-in-out infinite;
+        } */
+
+        .game-zone-wrap:hover {
+            filter: brightness(1.08);
+            transform: scale(1.05);
+        }
+
+        .game-zone-wrap:active {
+            transform: scale(0.97);
+        }
+
+        .game-zone-inner {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 10px;
+            border-radius: 25px;
+            /* slightly less than wrap to nest cleanly */
+            background: linear-gradient(90deg, #ff1f6e 0%, #ff4500 55%, #ff8c00 100%);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        @keyframes gameZonePulse {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 0 0 1px rgba(255, 255, 255, 0.25),
+                    0 0 18px 4px rgba(255, 255, 255, 0.25),
+                    0 8px 24px rgba(255, 60, 120, 0.45);
+            }
+
+            50% {
+                box-shadow:
+                    0 0 0 1px rgba(255, 255, 255, 0.35),
+                    0 0 28px 8px rgba(255, 255, 255, 0.38),
+                    0 10px 32px rgba(255, 60, 120, 0.65);
+            }
+        }
+
+        /* ── Keyframes ── */
+        @keyframes titleGradientMove {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 300% center;
+            }
+        }
+
+        @keyframes titleFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+                filter: drop-shadow(0 0 8px rgba(255, 244, 184, 0.25));
+            }
+
+            50% {
+                transform: translateY(-2px);
+                filter: drop-shadow(0 0 16px rgba(143, 247, 255, 0.45));
+            }
+        }
+
+        @keyframes bannerGlowSpin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes winPulse {
+            from {
+                box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.14), inset 0 -12px 18px rgba(47, 95, 217, 0.18), 0 10px 18px rgba(5, 20, 90, 0.28), 0 0 18px rgba(145, 241, 255, 0.45);
+            }
+
+            to {
+                box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.14), inset 0 -12px 18px rgba(47, 95, 217, 0.18), 0 10px 18px rgba(5, 20, 90, 0.28), 0 0 28px rgba(255, 236, 146, 0.75);
+            }
+        }
+
+        /* ════════════════════════════════════════ MOBILE ════════════════════════════════════════ */
+        @media (max-width: 820px) {
+            body {
+                padding: 12px;
+                align-items: flex-start;
+            }
+
+            .game-shell {
+                border-radius: 24px;
+            }
+
+            .top-banner {
+                padding: 20px 16px 16px;
+            }
+
+            .top-banner h1 {
+                font-size: clamp(1.4rem, 5vw, 2rem);
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .game-area {
+                grid-template-columns: 1fr;
+                padding: 14px 12px 18px;
+                gap: 12px;
+            }
+
+            .score-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            .iq-box {
+                padding: 18px 16px;
+                border-radius: 18px;
+            }
+
+            .iq-label {
+                font-size: 0.88rem;
+                margin-bottom: 5px;
+            }
+
+            .iq-value {
+                font-size: 2.8rem;
+            }
+
+            .stats {
+                margin-top: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 13px 18px;
+                border-radius: 14px;
+            }
+
+            .stat-card .label {
+                font-size: 0.95rem;
+            }
+
+            .stat-card span:last-child {
+                font-size: 1.15rem;
+            }
+
+            .controls {
+                margin-top: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .controls button {
+                width: 100%;
+                padding: 15px;
+                font-size: 1rem;
+                border-radius: 16px;
+            }
+
+            .board-wrap {
+                width: 100%;
+            }
+
+            .board {
+                width: 100%;
+                max-width: 100%;
+                gap: 8px;
+                padding: 10px;
+                border-radius: 20px;
+            }
+
+            .tile {
+                border-radius: 14px;
+                font-size: clamp(1.4rem, 6vw, 2.2rem);
+            }
+
+            .tile::before {
+                inset: 6px;
+                border-radius: 9px;
+            }
+
+            .message-panel {
+                grid-column: 1/-1;
+                border-radius: 14px;
+                padding: 12px 14px;
+                font-size: 0.9rem;
+            }
+
+            .game-zone-wrap {
+                right: 14px;
+                bottom: 14px;
+            }
+
+            .game-zone-inner {
+                padding: 11px 20px;
+                font-size: 0.92rem;
+            }
+        }
+
+        @media (max-width: 390px) {
+            body {
+                padding: 8px;
+            }
+
+            .game-shell {
+                border-radius: 18px;
+            }
+
+            .top-banner {
+                padding: 14px 12px 12px;
+            }
+
+            .top-banner h1 {
+                font-size: clamp(1.1rem, 6.5vw, 1.5rem);
+            }
+
+            .subtitle {
+                font-size: 0.78rem;
+            }
+
+            .game-area {
+                padding: 10px 8px 14px;
+                gap: 10px;
+            }
+
+            .score-panel {
+                padding: 10px;
+                gap: 8px;
+                border-radius: 16px;
+            }
+
+            .iq-box {
+                padding: 13px 12px;
+                border-radius: 14px;
+            }
+
+            .iq-label {
+                font-size: 0.78rem;
+            }
+
+            .iq-value {
+                font-size: 2.3rem;
+            }
+
+            .stat-card {
+                padding: 11px 14px;
+                border-radius: 12px;
+            }
+
+            .stat-card .label {
+                font-size: 0.85rem;
+            }
+
+            .stat-card span:last-child {
+                font-size: 1rem;
+            }
+
+            .controls button {
+                padding: 13px;
+                font-size: 0.92rem;
+                border-radius: 13px;
+            }
+
+            .board {
+                gap: 5px;
+                padding: 7px;
+                border-radius: 16px;
+            }
+
+            .tile {
+                border-radius: 11px;
+                font-size: clamp(1rem, 7.5vw, 1.8rem);
+            }
+
+            .tile::before {
+                inset: 4px;
+                border-radius: 7px;
+            }
+
+            .message-panel {
+                padding: 10px 12px;
+                font-size: 0.82rem;
+                border-radius: 12px;
+            }
+
+            .game-zone-wrap {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .game-zone-inner {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone1</div>
+    </a>
+    <div class="game-shell">
+        <header class="top-banner">
+            <h1> Brain Tester</h1>
+            <p class="subtitle">Slide the tiles into the correct order</p>
+        </header>
+
+        
+        <main class="game-area">
+            <section class="score-panel">
+                <div class="iq-box">
+                    <span class="iq-label">IQ</span>
+                    <span class="iq-value" id="iqValue">60</span>
+                </div>
+                <div class="stats">
+                    <div class="stat-card">
+                        <span class="label">Moves</span>
+                        <span id="moveCount">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="label">Time</span>
+                        <span id="timer">00:00</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button id="shuffleBtn">Shuffle</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
+            </section>
+
+            <section class="board-wrap">
+                <div class="board" id="board"></div>
+            </section>
+
+            <section class="message-panel">
+                <p id="message">Tap a tile next to the empty space to move it.</p>
+            </section>
+        </main>
+        
+
+    </div>
+
+    <!-- Game Zone FAB -->
+
+    <!-- <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone</div>
+    </a> -->
+
+    <script>
+        const board = document.getElementById("board");
+        const moveCountEl = document.getElementById("moveCount");
+        const timerEl = document.getElementById("timer");
+        const messageEl = document.getElementById("message");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const iqValueEl = document.getElementById("iqValue");
+
+        const SIZE = 4;
+        const EMPTY = 0;
+        const SOLVED_BOARD = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+
+        let tiles = [...SOLVED_BOARD];
+        let moves = 0, seconds = 0;
+        let timerInterval = null;
+        let gameStarted = false, gameWon = false;
+
+        function renderBoard() {
+            board.innerHTML = "";
+            tiles.forEach((value, index) => {
+                const tile = document.createElement("button");
+                tile.className = "tile";
+                tile.setAttribute("type", "button");
+                tile.dataset.index = index;
+                if (value === EMPTY) {
+                    tile.classList.add("empty");
+                    tile.disabled = true;
+                    tile.textContent = "";
+                } else {
+                    tile.textContent = value;
+                    tile.addEventListener("click", () => handleTileClick(index));
+                }
+                if (gameWon && value !== EMPTY) tile.classList.add("win");
+                board.appendChild(tile);
+            });
+        }
+
+        function handleTileClick(index) {
+            if (gameWon) return;
+            const emptyIndex = tiles.indexOf(EMPTY);
+            if (!isAdjacent(index, emptyIndex)) {
+                messageEl.textContent = "Only tiles next to the empty space can move.";
+                return;
+            }
+            if (!gameStarted) { startTimer(); gameStarted = true; }
+            swapTiles(index, emptyIndex);
+            moves++;
+            updateMoves();
+            renderBoard();
+            if (checkWin()) {
+                gameWon = true; stopTimer(); updateIQ(); renderBoard();
+                messageEl.textContent = `You solved it in ${moves} moves and ${formatTime(seconds)}.`;
+            } else {
+                messageEl.textContent = "Good move! Keep going.";
+            }
+        }
+
+        function isAdjacent(i1, i2) {
+            const r1 = Math.floor(i1 / SIZE), c1 = i1 % SIZE, r2 = Math.floor(i2 / SIZE), c2 = i2 % SIZE;
+            return (r1 === r2 && Math.abs(c1 - c2) === 1) || (c1 === c2 && Math.abs(r1 - r2) === 1);
+        }
+
+        function swapTiles(i, j) { [tiles[i], tiles[j]] = [tiles[j], tiles[i]]; }
+        function updateMoves() { moveCountEl.textContent = moves; }
+        function updateTimer() { timerEl.textContent = formatTime(seconds); }
+        function formatTime(t) { return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; }
+
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => { seconds++; updateTimer(); }, 1000);
+        }
+        function stopTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+        function checkWin() { return tiles.every((v, i) => v === SOLVED_BOARD[i]); }
+
+        function resetGame() {
+            tiles = [...SOLVED_BOARD]; moves = 0; seconds = 0;
+            gameStarted = false; gameWon = false;
+            stopTimer(); updateMoves(); updateTimer();
+            iqValueEl.textContent = "60";
+            messageEl.textContent = "Tap Shuffle to start a new puzzle.";
+            renderBoard();
+        }
+
+        function shuffleGame() {
+            tiles = [...SOLVED_BOARD];
+            let ei = tiles.indexOf(EMPTY);
+            for (let i = 0; i < 300; i++) {
+                const n = getMovableNeighbors(ei), rn = n[Math.floor(Math.random() * n.length)];
+                swapTiles(ei, rn); ei = rn;
+            }
+            if (checkWin()) { shuffleGame(); return; }
+            moves = 0; seconds = 0; gameStarted = false; gameWon = false;
+            stopTimer(); updateMoves(); updateTimer();
+            iqValueEl.textContent = "60";
+            messageEl.textContent = "Puzzle shuffled! Start sliding the tiles.";
+            renderBoard();
+        }
+
+        function getMovableNeighbors(ei) {
+            const row = Math.floor(ei / SIZE), col = ei % SIZE, n = [];
+            if (row > 0) n.push(ei - SIZE);
+            if (row < SIZE - 1) n.push(ei + SIZE);
+            if (col > 0) n.push(ei - 1);
+            if (col < SIZE - 1) n.push(ei + 1);
+            return n;
+        }
+
+        function updateIQ() {
+            let iq = 60;
+            if (moves <= 80) iq += 60;
+            else if (moves <= 100) iq += 40;
+            else if (moves <= 110) iq += 35;
+            else if (moves <= 120) iq += 30;
+            else if (moves <= 130) iq += 25;
+            else if (moves <= 140) iq += 20;
+            else if (moves <= 150) iq += 15;
+            else iq += 7;
+
+            if (seconds <= 120) iq += 60;
+            else if (seconds <= 180) iq += 40;
+            else if (seconds <= 210) iq += 35;
+            else if (seconds <= 240) iq += 25;
+            else if (seconds <= 290) iq += 20;
+            else if (seconds <= 300) iq += 15;
+            else if (seconds <= 330) iq += 10;
+
+            iqValueEl.textContent = iq;
+        }
+
+        shuffleBtn.addEventListener("click", shuffleGame);
+        resetBtn.addEventListener("click", resetGame);
+        resetGame();
+    </script>
+
+</body>
+
+</html>

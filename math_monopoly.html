@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Math Monopoly - Grades 4 to 6</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg1: #ffdd57;
+            --bg2: #00b4d8;
+            --bg3: #ffdd57;
+            --panel: rgba(241, 115, 115, 0.88);
+            --card: rgba(123, 179, 135, 0.92);
+            --text: #16213e;
+            --soft: #5b6c88;
+            --border: rgba(255, 255, 255, 0.65);
+            --blue: #2563eb;
+            --green: #16a34a;
+            --red: #ef4444;
+            --orange: #f59e0b;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(118, 170, 120, 0.28), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(238, 176, 7, 0.35), transparent 35%),
+                linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            background-size: 200% 200%;
+            animation: bgMove 12s ease infinite;
+        }
+
+        @keyframes bgMove {
+            0% {
+                background-position: left top;
+            }
+
+            50% {
+                background-position: right bottom;
+            }
+
+            100% {
+                background-position: left top;
+            }
+        }
+
+        .app {
+            max-width: 1450px;
+            margin: 0 auto;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1.25fr 0.85fr;
+            gap: 18px;
+            min-height: 100vh;
+        }
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(14px);
+            border-radius: 26px;
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
+            border: 1px solid var(--border);
+        }
+
+        .left-panel,
+        .right-panel {
+            padding: 18px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 900;
+            margin: 4px 0 8px;
+            color: #da4848;
+            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+            background: linear-gradient(90deg, #ffdd57, #ffffff, #9fffe0);
+            /* -webkit-background-clip: text; */
+            /* color: transparent; */
+            animation: titleFlow 4s linear infinite, titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #eef7ff;
+            margin-bottom: 16px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .board-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board {
+            width: min(820px, 100%);
+            aspect-ratio: 1 / 1;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 7px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05)),
+                #063b63;
+            border-radius: 24px;
+            padding: 9px;
+            position: relative;
+            box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.18);
+        }
+
+        .center-area {
+            grid-column: 2 / 7;
+            grid-row: 2 / 7;
+            border-radius: 24px;
+            border: 3px dashed rgba(255, 255, 255, 0.75);
+            background:
+                radial-gradient(circle at top, rgba(246, 141, 141, 0.95), rgba(158, 233, 174, 0.92), rgba(158, 208, 233, 0.92)),
+                linear-gradient(135deg, #d5cbcb, #dff7ff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 22px;
+            box-shadow: inset 0 0 30px rgba(47, 128, 237, 0.15);
+        }
+
+        .center-area h2 {
+            font-size: clamp(26px, 5vw, 42px);
+            margin: 0 0 10px;
+            color: #174ea6;
+        }
+
+        .center-area p {
+            margin: 0;
+            line-height: 1.65;
+            color: #52657f;
+            max-width: 430px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .tile {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 74px;
+            position: relative;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tile:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 14px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile.special {
+            background: linear-gradient(180deg, #fff8d9, #fff0b8);
+        }
+
+        .tile.property {
+            background: linear-gradient(180deg, #ffffff, #eef8ff);
+        }
+
+        .color-bar {
+            width: 100%;
+            height: 12px;
+            border-radius: 999px;
+            margin-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        .tile-name {
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1.15;
+            min-height: 26px;
+            color: #1b2b4f;
+        }
+
+        .tile-small {
+            font-size: 10px;
+            color: #60718a;
+            line-height: 1.2;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+
+        .owner-badge {
+            margin-top: 4px;
+            font-size: 10px;
+            color: white;
+            border-radius: 999px;
+            padding: 2px 7px;
+            width: fit-content;
+            font-weight: 900;
+        }
+
+        .tile-tokens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: auto;
+            padding-top: 4px;
+        }
+
+        .token {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            animation: tokenPulse 1.8s ease infinite;
+        }
+
+        @keyframes tokenPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.12);
+            }
+        }
+
+        .card,
+        .question-box {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #174ea6;
+            margin: 0 0 10px;
+        }
+
+        .players-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .player-card {
+            display: grid;
+            grid-template-columns: 22px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            border: 2px solid #e1ebf7;
+            border-radius: 16px;
+            padding: 10px;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .player-card.active {
+            border-color: #38bdf8;
+            background: linear-gradient(135deg, #e0f7ff, #ffffff);
+            transform: scale(1.02);
+        }
+
+        .player-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .player-name {
+            font-weight: 900;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .player-meta {
+            font-size: 12px;
+            color: #667894;
+            line-height: 1.45;
+            font-weight: 700;
+        }
+
+        .turn-box strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #204684;
+        }
+
+        .dice {
+            font-size: 34px;
+            font-weight: 900;
+            color: #245bb2;
+            margin-bottom: 8px;
+            animation: diceBounce 1.5s ease infinite;
+        }
+
+        @keyframes diceBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        .status {
+            min-height: 52px;
+            line-height: 1.5;
+            font-size: 14px;
+            color: #4d5f79;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 14px;
+            padding: 13px 17px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -80%;
+            width: 60%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.35);
+            transform: skewX(-25deg);
+            transition: left 0.45s ease;
+        }
+
+        button:hover::after {
+            left: 130%;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #16a34a, #86efac);
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #ef4444, #fb7185);
+        }
+
+        .btn-orange {
+            background: linear-gradient(135deg, #f59e0b, #facc15);
+            color: #3b2600;
+        }
+
+        .question-box {
+            display: none;
+            background: linear-gradient(135deg, #fff9d8, #ffffff);
+            border: 2px solid rgba(255, 214, 102, 0.8);
+            animation: popIn 0.35s ease;
+        }
+
+        .question-box.active {
+            display: block;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 900;
+            color: #4f431f;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 180px;
+            border-radius: 14px;
+            border: 2px solid #d5dfec;
+            padding: 13px;
+            font-size: 15px;
+            outline: none;
+            font-weight: 700;
+        }
+
+        input[type="text"]:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #6d7c95;
+            margin-top: 8px;
+            line-height: 1.45;
+            font-weight: 700;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            background: white;
+            border: 1px solid #dbe7f5;
+            border-radius: 14px;
+            padding: 9px;
+            color: #566882;
+            font-weight: 900;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: #eef7ff;
+            font-weight: 800;
+        }
+
+        /* Tablet */
+        @media (max-width: 1100px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .right-panel {
+                order: 2;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 700px) {
+            .app {
+                padding: 10px;
+                gap: 12px;
+            }
+
+            .left-panel,
+            .right-panel {
+                padding: 12px;
+                border-radius: 20px;
+            }
+
+            .board {
+                gap: 4px;
+                padding: 5px;
+                border-radius: 18px;
+            }
+
+            .center-area {
+                border-radius: 16px;
+                padding: 10px;
+            }
+
+            .center-area p {
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .tile {
+                border-radius: 10px;
+                padding: 3px;
+                min-height: 48px;
+            }
+
+            .color-bar {
+                height: 7px;
+                margin-bottom: 2px;
+            }
+
+            .tile-name {
+                font-size: 7.5px;
+                min-height: 18px;
+            }
+
+            .tile-small {
+                font-size: 7px;
+            }
+
+            .owner-badge {
+                font-size: 7px;
+                padding: 1px 4px;
+            }
+
+            .token {
+                width: 12px;
+                height: 12px;
+            }
+
+            .controls,
+            .answer-row {
+                flex-direction: column;
+            }
+
+            button,
+            input[type="text"] {
+                width: 100%;
+            }
+
+            .legend {
+                grid-template-columns: 1fr;
+            }
+
+            .player-card {
+                grid-template-columns: 20px 1fr;
+            }
+
+            .player-card>.player-meta:last-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 430px) {
+            .title {
+                font-size: 27px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .center-area h2 {
+                font-size: 22px;
+            }
+
+            .center-area p {
+                display: none;
+            }
+
+            .tile-name {
+                font-size: 6.8px;
+            }
+
+            .tile-small {
+                display: none;
+            }
+        }
+
+        .title {
+
+            background: linear-gradient(90deg,
+                    #e53742,
+                    #ffffff,
+                    #00f5d4,
+                    #ff6b6b,
+                    #ffd166,
+                    #ffffff);
+
+            background-size: 400% 400%;
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            /* color: gredient ; */
+            background: linear-gradient(90deg, #ffdd57, #ffffff, #9fffe0);
+            /* background: linear-gradient(90deg, #41efcf, #e6cc0b, #ffffff, #13ec30, #e17676); */
+            /* animation: shine 5s linear infinite; */
+            /* animation: floaty 2.8s ease-in-out infinite; */
+            animation:
+                titleGradientFlow 5s linear infinite,
+                titleFloat 2.5s ease-in-out infinite,
+                titleGlowPulse 1.8s ease-in-out infinite alternate;
+
+        }
+
+        /* Smooth flowing gradient */
+        @keyframes titleGradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating effect */
+        @keyframes titleFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-6px) scale(1.05);
+            }
+        }
+
+        /* Glow pulse */
+        @keyframes titleGlowPulse {
+            from {
+                text-shadow:
+                    0 0 8px rgba(255, 255, 255, 0.8),
+                    0 0 20px rgba(255, 221, 87, 0.8),
+                    0 0 35px rgba(0, 180, 216, 0.7);
+            }
+
+            to {
+                text-shadow:
+                    0 0 14px rgba(255, 255, 255, 1),
+                    0 0 30px rgba(255, 107, 107, 0.9),
+                    0 0 50px rgba(0, 245, 212, 0.9);
+            }
+        }
+
+        /* 🎲 Dice Animation Upgrade */
+        .dice {
+            display: inline-block;
+
+            animation:
+                diceBounce 1.5s ease infinite,
+                diceSpin 3s linear infinite,
+                diceGlow 1.2s ease-in-out infinite alternate;
+        }
+
+        /* Spin effect */
+        @keyframes diceSpin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Glow */
+        @keyframes diceGlow {
+            from {
+                text-shadow:
+                    0 0 8px rgba(37, 99, 235, 0.5),
+                    0 0 16px rgba(37, 99, 235, 0.6);
+            }
+
+            to {
+                text-shadow:
+                    0 0 20px rgba(56, 189, 248, 0.9),
+                    0 0 35px rgba(56, 189, 248, 1);
+            }
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 700px) {
+            .dice {
+                animation:
+                    diceBounce 1.5s ease infinite,
+                    diceGlow 1.2s ease-in-out infinite alternate;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html#pick-your-game" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Game Zone </div>
+    </a>
+    <div class="app">
+        <div class="panel left-panel">
+            <div class="title"> 🎲 Math Monopoly</div>
+            <div class="subtitle">Grades 4–6 math combined into a Monopoly-style learning game</div>
+
+            <div class="board-wrap">
+                <div class="board" id="board">
+                    <div class="center-area">
+                        <h2>Math Town</h2>
+                        <p>
+                            Roll the dice, solve math questions, buy properties,
+                            pay rent, and build the highest net worth to win.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <div class="card">
+                <div class="section-title">Players</div>
+                <div class="players-list" id="playersPanel"></div>
+            </div>
+
+            <div class="card turn-box">
+                <div class="section-title">Turn Panel</div>
+                <strong id="turnLabel">Current Turn: Player 1</strong>
+                <div class="dice" id="diceResult"> 🎲 </div>
+                <div class="status" id="statusText">Press Roll Dice to start the game.</div>
+
+                <div class="controls">
+                    <button class="btn-blue" id="rollBtn">Roll Dice</button>
+                    <button class="btn-green" id="nextBtn" disabled>Next Turn</button>
+                    <button class="btn-red" id="resetBtn">Reset Game</button>
+                </div>
+            </div>
+
+            <div class="question-box" id="questionBox">
+                <div class="section-title">Math Challenge</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="answer-row">
+                    <input type="text" id="answerInput" placeholder="Type your answer here" />
+                    <button class="btn-orange" id="submitAnswerBtn">Submit</button>
+                </div>
+                <div class="hint">
+                    For fractions, type like <b>3/4</b>. For decimals, type like <b>2.5</b>.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Legend</div>
+                <div class="legend">
+                    <div class="legend-item">🟩 Fractions</div>
+                    <div class="legend-item">🟦 Decimals</div>
+                    <div class="legend-item">🟨 Multiplication</div>
+                    <div class="legend-item">🟥 Division</div>
+                    <div class="legend-item">🟪 Geometry</div>
+                    <div class="legend-item">⭐ Chance / Tax / Jail</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Rules</div>
+                <div class="hint" style="font-size:13px">
+                    1. Roll dice and move.<br>
+                    2. On unowned property: solve correctly to buy it.<br>
+                    3. On owned property: solve correctly to pay half rent, otherwise full rent.<br>
+                    4. On tax square: solve correctly to pay reduced tax.<br>
+                    5. On chance square: solve and get reward or penalty.<br>
+                    6. Passing START gives $100.<br>
+                    7. Highest net worth wins.
+                </div>
+            </div>
+
+            <div class="footer-note">Single-file HTML/CSS/JavaScript game</div>
+        </div>
+    </div>
+
+    <script>
+        const playerColors = ["#ef4444", "#3b82f6", "#22c55e", "#a855f7"];
+
+        const boardData = [
+            { type: "start", name: "START", action: "Collect $100 when passing" },
+            { type: "property", name: "Fraction Forest", category: "fractions", color: "#55b45f", price: 100, rent: 25 },
+            { type: "chance", name: "Chance Card" },
+            { type: "property", name: "Decimal Lake", category: "decimals", color: "#46a7ff", price: 120, rent: 30 },
+            { type: "tax", name: "School Tax", taxGood: 40, taxBad: 100 },
+            { type: "property", name: "Multiply Market", category: "multiplication", color: "#ffd34d", price: 130, rent: 35 },
+            { type: "jail", name: "JAIL / VISIT" },
+
+            { type: "property", name: "Division Desert", category: "division", color: "#ff7373", price: 140, rent: 40 },
+            { type: "chance", name: "Chance Card" },
+            { type: "property", name: "Geometry Garden", category: "geometry", color: "#c27aff", price: 150, rent: 45 },
+            { type: "tax", name: "Homework Tax", taxGood: 50, taxBad: 120 },
+            { type: "property", name: "Fraction Farm", category: "fractions", color: "#79c96d", price: 160, rent: 50 },
+            { type: "chance", name: "Chance Card" },
+            { type: "property", name: "Decimal Dock", category: "decimals", color: "#67b5ff", price: 170, rent: 55 },
+            { type: "property", name: "Times Tower", category: "multiplication", color: "#ffe279", price: 180, rent: 60 },
+            { type: "goToJail", name: "GO TO JAIL" },
+
+            { type: "property", name: "Divide Drive", category: "division", color: "#ff9a9a", price: 190, rent: 65 },
+            { type: "chance", name: "Chance Card" },
+            { type: "property", name: "Shape Square", category: "geometry", color: "#cf8aff", price: 200, rent: 70 },
+            { type: "tax", name: "Library Tax", taxGood: 60, taxBad: 140 },
+            { type: "property", name: "Fraction Field", category: "fractions", color: "#95d687", price: 210, rent: 75 },
+            { type: "chance", name: "Chance Card" },
+            { type: "property", name: "Decimal Depot", category: "decimals", color: "#7fc4ff", price: 220, rent: 80 },
+            { type: "property", name: "Multiply Mall", category: "multiplication", color: "#ffe898", price: 230, rent: 85 }
+        ];
+
+        const boardPositions = [
+            [7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6], [7, 7],
+            [6, 7], [5, 7], [4, 7], [3, 7], [2, 7], [1, 7],
+            [1, 6], [1, 5], [1, 4], [1, 3], [1, 2], [1, 1],
+            [2, 1], [3, 1], [4, 1], [5, 1], [6, 1]
+        ];
+
+        const players = [
+            { id: 0, name: "Player 1", money: 700, position: 0, properties: [], inJail: false, jailTurns: 0 },
+            { id: 1, name: "Player 2", money: 700, position: 0, properties: [], inJail: false, jailTurns: 0 },
+            { id: 2, name: "Player 3", money: 700, position: 0, properties: [], inJail: false, jailTurns: 0 },
+            { id: 3, name: "Player 4", money: 700, position: 0, properties: [], inJail: false, jailTurns: 0 }
+        ];
+
+        const boardEl = document.getElementById("board");
+        const playersPanel = document.getElementById("playersPanel");
+        const turnLabel = document.getElementById("turnLabel");
+        const diceResult = document.getElementById("diceResult");
+        const statusText = document.getElementById("statusText");
+        const rollBtn = document.getElementById("rollBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const questionBox = document.getElementById("questionBox");
+        const questionText = document.getElementById("questionText");
+        const answerInput = document.getElementById("answerInput");
+        const submitAnswerBtn = document.getElementById("submitAnswerBtn");
+        // const playerColors = ["#ef4444", "#3b82f6", "#22c55e", "#a855f7"];
+
+        let currentPlayerIndex = 0;
+        let awaitingAnswer = false;
+        let pendingAction = null;
+        let tileOwners = {};
+        let gameOver = false;
+
+        function currentPlayer() {
+            return players[currentPlayerIndex];
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function gcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b !== 0) {
+                [a, b] = [b, a % b];
+            }
+            return a || 1;
+        }
+
+        function simplifyFraction(n, d) {
+            const g = gcd(n, d);
+            return `${n / g}/${d / g}`;
+        }
+
+        function parseFraction(value) {
+            const parts = value.split("/");
+            if (parts.length !== 2) return null;
+            const n = Number(parts[0]);
+            const d = Number(parts[1]);
+            if (isNaN(n) || isNaN(d) || d === 0) return null;
+            return { n, d };
+        }
+
+        function normalizeAnswer(str) {
+            return String(str).trim().toLowerCase().replace(/\s+/g, "");
+        }
+
+        function answersMatch(userAnswer, correctAnswer) {
+            const user = normalizeAnswer(userAnswer);
+            const correct = normalizeAnswer(correctAnswer);
+
+            if (user === correct) return true;
+
+            const userFraction = parseFraction(user);
+            const correctFraction = parseFraction(correct);
+
+            if (userFraction && correctFraction) {
+                return userFraction.n * correctFraction.d === correctFraction.n * userFraction.d;
+            }
+
+            const userNum = Number(user);
+            const correctNum = Number(correct);
+
+            if (!isNaN(userNum) && !isNaN(correctNum)) {
+                return Math.abs(userNum - correctNum) < 0.0001;
+            }
+
+            return false;
+        }
+
+        function generateQuestion(category) {
+            const grade = getRandomInt(4, 6);
+
+            if (category === "fractions") {
+                if (grade === 4) {
+                    const d = [2, 4, 6, 8][getRandomInt(0, 3)];
+                    const a = getRandomInt(1, d - 1);
+                    const b = getRandomInt(1, d - 1);
+                    return {
+                        text: `Grade ${grade}: What is ${a}/${d} + ${b}/${d}?`,
+                        answer: simplifyFraction(a + b, d)
+                    };
+                } else if (grade === 5) {
+                    const d1 = [2, 3, 4, 5, 6][getRandomInt(0, 4)];
+                    const d2 = [2, 3, 4, 5, 6][getRandomInt(0, 4)];
+                    const a = getRandomInt(1, d1 - 1);
+                    const b = getRandomInt(1, d2 - 1);
+                    return {
+                        text: `Grade ${grade}: What is ${a}/${d1} + ${b}/${d2}?`,
+                        answer: simplifyFraction(a * d2 + b * d1, d1 * d2)
+                    };
+                } else {
+                    const whole = getRandomInt(1, 4);
+                    const d = [2, 4, 5, 10][getRandomInt(0, 3)];
+                    const n = getRandomInt(1, d - 1);
+                    return {
+                        text: `Grade ${grade}: Convert ${whole} ${n}/${d} to an improper fraction.`,
+                        answer: `${whole * d + n}/${d}`
+                    };
+                }
+            }
+
+            if (category === "decimals") {
+                if (grade === 4) {
+                    const a = (getRandomInt(11, 49) / 10).toFixed(1);
+                    const b = (getRandomInt(11, 49) / 10).toFixed(1);
+                    return {
+                        text: `Grade ${grade}: What is ${a} + ${b}?`,
+                        answer: (Number(a) + Number(b)).toFixed(1)
+                    };
+                } else if (grade === 5) {
+                    let a = (getRandomInt(120, 980) / 100).toFixed(2);
+                    let b = (getRandomInt(100, 600) / 100).toFixed(2);
+                    return {
+                        text: `Grade ${grade}: What is ${a} - ${b}?`,
+                        answer: (Number(a) - Number(b)).toFixed(2)
+                    };
+                } else {
+                    const den = [10, 100][getRandomInt(0, 1)];
+                    const num = getRandomInt(1, den - 1);
+                    return {
+                        text: `Grade ${grade}: Convert ${num}/${den} to a decimal.`,
+                        answer: String(num / den)
+                    };
+                }
+            }
+
+            if (category === "multiplication") {
+                if (grade === 4) {
+                    const a = getRandomInt(2, 12);
+                    const b = getRandomInt(2, 12);
+                    return {
+                        text: `Grade ${grade}: What is ${a} × ${b}?`,
+                        answer: String(a * b)
+                    };
+                } else if (grade === 5) {
+                    const a = getRandomInt(11, 49);
+                    const b = getRandomInt(2, 9);
+                    return {
+                        text: `Grade ${grade}: What is ${a} × ${b}?`,
+                        answer: String(a * b)
+                    };
+                } else {
+                    const a = getRandomInt(10, 25);
+                    const b = getRandomInt(10, 25);
+                    return {
+                        text: `Grade ${grade}: Multiply ${a} × ${b}.`,
+                        answer: String(a * b)
+                    };
+                }
+            }
+
+            if (category === "division") {
+                if (grade === 4) {
+                    const b = getRandomInt(2, 10);
+                    const ans = getRandomInt(2, 10);
+                    const a = b * ans;
+                    return {
+                        text: `Grade ${grade}: What is ${a} ÷ ${b}?`,
+                        answer: String(ans)
+                    };
+                } else if (grade === 5) {
+                    const b = getRandomInt(2, 12);
+                    const ans = getRandomInt(5, 20);
+                    const a = b * ans;
+                    return {
+                        text: `Grade ${grade}: What is ${a} ÷ ${b}?`,
+                        answer: String(ans)
+                    };
+                } else {
+                    const groups = getRandomInt(2, 6);
+                    const each = getRandomInt(6, 12);
+                    const total = groups * each;
+                    return {
+                        text: `Grade ${grade}: ${total} items are shared equally among ${groups} groups. How many in each group?`,
+                        answer: String(each)
+                    };
+                }
+            }
+
+            if (category === "geometry") {
+                if (grade === 4) {
+                    const l = getRandomInt(2, 10);
+                    const w = getRandomInt(2, 10);
+                    return {
+                        text: `Grade ${grade}: Find the perimeter of a rectangle with length ${l} and width ${w}.`,
+                        answer: String(2 * (l + w))
+                    };
+                } else if (grade === 5) {
+                    const l = getRandomInt(3, 12);
+                    const w = getRandomInt(3, 12);
+                    return {
+                        text: `Grade ${grade}: Find the area of a rectangle with length ${l} and width ${w}.`,
+                        answer: String(l * w)
+                    };
+                } else {
+                    const side = getRandomInt(3, 12);
+                    return {
+                        text: `Grade ${grade}: Find the area of a square with side ${side}.`,
+                        answer: String(side * side)
+                    };
+                }
+            }
+
+            return { text: "What is 2 + 2?", answer: "4" };
+        }
+
+        function generateChanceCard() {
+            const randomType = getRandomInt(1, 4);
+
+            if (randomType === 1) {
+                const a = getRandomInt(6, 15);
+                const b = getRandomInt(2, 8);
+                return {
+                    question: {
+                        text: `Chance: Solve ${a} × ${b}. Correct = earn $80, wrong = lose $30.`,
+                        answer: String(a * b)
+                    },
+                    onCorrect: () => modifyMoney(currentPlayer(), 80),
+                    onWrong: () => modifyMoney(currentPlayer(), -30)
+                };
+            }
+
+            if (randomType === 2) {
+                const total = getRandomInt(20, 60);
+                const part = [2, 3, 4, 5][getRandomInt(0, 3)];
+                const value = total / part;
+                return {
+                    question: {
+                        text: `Chance: What is ${total} ÷ ${part}? Correct = move ahead 2 spaces.`,
+                        answer: String(value)
+                    },
+                    onCorrect: () => {
+                        movePlayer(currentPlayer(), 2);
+                        statusText.textContent += ` ${currentPlayer().name} moved 2 extra spaces.`;
+                        resolveTileAfterMove();
+                    },
+                    onWrong: () => { }
+                };
+            }
+
+            if (randomType === 3) {
+                const l = getRandomInt(4, 10);
+                const w = getRandomInt(2, 8);
+                return {
+                    question: {
+                        text: `Chance: What is the area of a rectangle with length ${l} and width ${w}? Correct = earn $90, wrong = lose $20.`,
+                        answer: String(l * w)
+                    },
+                    onCorrect: () => modifyMoney(currentPlayer(), 90),
+                    onWrong: () => modifyMoney(currentPlayer(), -20)
+                };
+            }
+
+            const den = [2, 4, 5, 10][getRandomInt(0, 3)];
+            const num = getRandomInt(1, den - 1);
+            return {
+                question: {
+                    text: `Chance: Convert ${num}/${den} to decimal. Correct = earn $70, wrong = lose $25.`,
+                    answer: String(num / den)
+                },
+                onCorrect: () => modifyMoney(currentPlayer(), 70),
+                onWrong: () => modifyMoney(currentPlayer(), -25)
+            };
+        }
+
+        function renderTokensForTile(tileIndex) {
+            return players
+                .map((p, idx) =>
+                    p.position === tileIndex
+                        ? `<div class="token" style="background:${playerColors[idx]}"></div>`
+                        : ""
+                )
+                .join("");
+        }
+
+        function createBoard() {
+            boardEl.querySelectorAll(".tile").forEach(tile => tile.remove());
+
+            for (let i = 0; i < boardData.length; i++) {
+                const tileData = boardData[i];
+                const tile = document.createElement("div");
+                tile.className = `tile ${tileData.type === "property" ? "property" : "special"}`;
+                tile.dataset.index = i;
+
+                const [row, col] = boardPositions[i];
+                tile.style.gridRow = row;
+                tile.style.gridColumn = col;
+
+                let barColor = "#f6c555";
+                if (tileData.type === "property") {
+                    barColor = tileData.color;
+                }
+
+                let html = `
+          <div class="color-bar" style="background:${barColor}"></div>
+          <div class="tile-name">${tileData.name}</div>
+        `;
+
+                if (tileData.type === "property") {
+                    html += `
+            <div class="tile-small">Buy: $${tileData.price}</div>
+            <div class="tile-small">Rent: $${tileData.rent}</div>
+          `;
+                    if (tileOwners[i] !== undefined) {
+                        html += `<div class="owner-badge" style="background:${playerColors[tileOwners[i]]}">Owned</div>`;
+                    }
+                } else if (tileData.type === "chance") {
+                    html += `<div class="tile-small">Draw challenge</div>`;
+                } else if (tileData.type === "tax") {
+                    html += `<div class="tile-small">Solve for low tax</div>`;
+                } else if (tileData.type === "jail" || tileData.type === "goToJail") {
+                    html += `<div class="tile-small">Special square</div>`;
+                } else {
+                    html += `<div class="tile-small">${tileData.action || ""}</div>`;
+                }
+
+                html += `<div class="tile-tokens">${renderTokensForTile(i)}</div>`;
+                tile.innerHTML = html;
+                boardEl.appendChild(tile);
+            }
+        }
+
+        function renderPlayers() {
+            playersPanel.innerHTML = "";
+
+            players.forEach((player, idx) => {
+                const propertyValue = player.properties.reduce((sum, tileIndex) => {
+                    return sum + boardData[tileIndex].price;
+                }, 0);
+
+                const card = document.createElement("div");
+                card.className = "player-card" + (idx === currentPlayerIndex ? " active" : "");
+                card.innerHTML = `
+          <div class="player-dot" style="background:${playerColors[idx]}"></div>
+          <div>
+            <div class="player-name">${player.name}</div>
+            <div class="player-meta">
+              Money: $${player.money}<br>
+              Properties: ${player.properties.length}<br>
+              Net Worth: $${player.money + propertyValue}<br>
+              ${player.inJail ? `In Jail (${player.jailTurns} turn left)` : "Free"}
+            </div>
+          </div>
+          <div class="player-meta">Pos ${player.position}</div>
+        `;
+                playersPanel.appendChild(card);
+            });
+
+            turnLabel.textContent = `Current Turn: ${currentPlayer().name}`;
+            createBoard();
+        }
+
+        function showQuestion(text) {
+            questionBox.classList.add("active");
+            questionText.textContent = text;
+            answerInput.value = "";
+            awaitingAnswer = true;
+            rollBtn.disabled = true;
+            nextBtn.disabled = true;
+            setTimeout(() => answerInput.focus(), 10);
+        }
+
+        function hideQuestion() {
+            questionBox.classList.remove("active");
+            awaitingAnswer = false;
+        }
+
+        function modifyMoney(player, amount) {
+            player.money += amount;
+            if (player.money < 0) player.money = 0;
+            renderPlayers();
+            checkGameOver();
+        }
+
+        function movePlayer(player, steps) {
+            const oldPos = player.position;
+            let newPos = oldPos + steps;
+
+            if (newPos >= boardData.length) {
+                newPos = newPos % boardData.length;
+                player.money += 100;
+                statusText.textContent = `${player.name} passed START and collected $100.`;
+            }
+
+            player.position = newPos;
+            renderPlayers();
+        }
+
+        function sendToJail(player) {
+            player.position = 6;
+            player.inJail = true;
+            player.jailTurns = 1;
+            renderPlayers();
+        }
+
+        function endTurnReady() {
+            rollBtn.disabled = true;
+            nextBtn.disabled = false;
+            if (gameOver) {
+                rollBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        }
+
+        function resolveTileAfterMove() {
+            const player = currentPlayer();
+            const tileIndex = player.position;
+            const tile = boardData[tileIndex];
+
+            if (tile.type === "start") {
+                statusText.textContent = `${player.name} landed on START.`;
+                endTurnReady();
+                return;
+            }
+
+            if (tile.type === "property") {
+                if (tileOwners[tileIndex] === undefined) {
+                    const q = generateQuestion(tile.category);
+                    pendingAction = {
+                        type: "buyProperty",
+                        tileIndex,
+                        question: q
+                    };
+                    statusText.textContent = `${player.name} landed on ${tile.name}. Solve correctly to buy it for $${tile.price}.`;
+                    showQuestion(q.text);
+                    return;
+                }
+
+                if (tileOwners[tileIndex] === player.id) {
+                    statusText.textContent = `${player.name} landed on their own property: ${tile.name}.`;
+                    endTurnReady();
+                    return;
+                }
+
+                const q = generateQuestion(tile.category);
+                pendingAction = {
+                    type: "payRent",
+                    tileIndex,
+                    question: q
+                };
+                statusText.textContent = `${player.name} landed on ${tile.name}. Solve correctly to pay half rent.`;
+                showQuestion(q.text);
+                return;
+            }
+
+            if (tile.type === "chance") {
+                const chance = generateChanceCard();
+                pendingAction = {
+                    type: "chance",
+                    chance
+                };
+                statusText.textContent = `${player.name} landed on Chance.`;
+                showQuestion(chance.question.text);
+                return;
+            }
+
+            if (tile.type === "tax") {
+                const categories = ["multiplication", "division", "fractions", "decimals"];
+                const q = generateQuestion(categories[getRandomInt(0, categories.length - 1)]);
+                pendingAction = {
+                    type: "tax",
+                    tileIndex,
+                    question: q
+                };
+                statusText.textContent = `${player.name} landed on ${tile.name}. Solve correctly to pay reduced tax.`;
+                showQuestion(q.text);
+                return;
+            }
+
+            if (tile.type === "jail") {
+                if (player.inJail) {
+                    const categories = ["multiplication", "division", "fractions"];
+                    const q = generateQuestion(categories[getRandomInt(0, categories.length - 1)]);
+                    pendingAction = {
+                        type: "escapeJail",
+                        question: q
+                    };
+                    statusText.textContent = `${player.name} is in Jail. Solve correctly to escape.`;
+                    showQuestion(q.text);
+                    return;
+                } else {
+                    statusText.textContent = `${player.name} is just visiting Jail.`;
+                    endTurnReady();
+                    return;
+                }
+            }
+
+            if (tile.type === "goToJail") {
+                statusText.textContent = `${player.name} landed on GO TO JAIL!`;
+                sendToJail(player);
+                endTurnReady();
+                return;
+            }
+
+            endTurnReady();
+        }
+
+        function handleAnswerSubmission() {
+            if (!pendingAction || !awaitingAnswer) return;
+
+            const userAns = answerInput.value.trim();
+            if (!userAns) return;
+
+            const player = currentPlayer();
+            let correctAnswer = "";
+
+            if (pendingAction.type === "chance") {
+                correctAnswer = pendingAction.chance.question.answer;
+            } else {
+                correctAnswer = pendingAction.question.answer;
+            }
+
+            const correct = answersMatch(userAns, correctAnswer);
+
+            if (pendingAction.type === "buyProperty") {
+                const tileIndex = pendingAction.tileIndex;
+                const tile = boardData[tileIndex];
+
+                if (correct) {
+                    if (player.money >= tile.price) {
+                        modifyMoney(player, -tile.price);
+                        tileOwners[tileIndex] = player.id;
+                        player.properties.push(tileIndex);
+                        statusText.textContent = `Correct! ${player.name} bought ${tile.name} for $${tile.price}.`;
+                    } else {
+                        statusText.textContent = `Correct, but ${player.name} does not have enough money to buy ${tile.name}.`;
+                    }
+                } else {
+                    statusText.textContent = `Wrong. Correct answer was ${correctAnswer}. ${player.name} could not buy ${tile.name}.`;
+                }
+            }
+
+            else if (pendingAction.type === "payRent") {
+                const tileIndex = pendingAction.tileIndex;
+                const tile = boardData[tileIndex];
+                const ownerId = tileOwners[tileIndex];
+                const owner = players[ownerId];
+                const rent = correct ? Math.floor(tile.rent / 2) : tile.rent;
+
+                modifyMoney(player, -rent);
+                modifyMoney(owner, rent);
+
+                if (correct) {
+                    statusText.textContent = `Correct! ${player.name} paid half rent: $${rent} to ${owner.name}.`;
+                } else {
+                    statusText.textContent = `Wrong. Correct answer was ${correctAnswer}. ${player.name} paid full rent: $${rent} to ${owner.name}.`;
+                }
+            }
+
+            else if (pendingAction.type === "tax") {
+                const tile = boardData[pendingAction.tileIndex];
+                const taxAmount = correct ? tile.taxGood : tile.taxBad;
+                modifyMoney(player, -taxAmount);
+
+                if (correct) {
+                    statusText.textContent = `Correct! Reduced tax: ${player.name} paid $${taxAmount}.`;
+                } else {
+                    statusText.textContent = `Wrong. Correct answer was ${correctAnswer}. ${player.name} paid full tax: $${taxAmount}.`;
+                }
+            }
+
+            else if (pendingAction.type === "chance") {
+                if (correct) {
+                    statusText.textContent = `Correct! Chance reward applied.`;
+                    pendingAction.chance.onCorrect();
+                } else {
+                    statusText.textContent = `Wrong. Correct answer was ${correctAnswer}. Chance penalty applied.`;
+                    pendingAction.chance.onWrong();
+                }
+            }
+
+            else if (pendingAction.type === "escapeJail") {
+                if (correct) {
+                    player.inJail = false;
+                    player.jailTurns = 0;
+                    statusText.textContent = `Correct! ${player.name} escaped Jail.`;
+                } else {
+                    statusText.textContent = `Wrong. Correct answer was ${correctAnswer}. ${player.name} stays in Jail for this turn.`;
+                    player.jailTurns = Math.max(0, player.jailTurns - 1);
+                    if (player.jailTurns === 0) {
+                        player.inJail = false;
+                    }
+                }
+            }
+
+            pendingAction = null;
+            hideQuestion();
+            renderPlayers();
+            endTurnReady();
+        }
+
+        function rollDice() {
+            if (awaitingAnswer || gameOver) return;
+
+            const player = currentPlayer();
+
+            if (player.inJail && player.position === 6) {
+                const categories = ["multiplication", "division", "fractions"];
+                const q = generateQuestion(categories[getRandomInt(0, categories.length - 1)]);
+                pendingAction = {
+                    type: "escapeJail",
+                    question: q
+                };
+                statusText.textContent = `${player.name} is in Jail. Solve correctly to escape.`;
+                showQuestion(q.text);
+                return;
+            }
+
+            const dice = getRandomInt(1, 6);
+            diceResult.textContent = `🎲 ${dice}`;
+            movePlayer(player, dice);
+            statusText.textContent = `${player.name} rolled ${dice} and moved to ${boardData[player.position].name}.`;
+            resolveTileAfterMove();
+        }
+
+        function nextTurn() {
+            if (gameOver) return;
+
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            turnLabel.textContent = `Current Turn: ${currentPlayer().name}`;
+            diceResult.textContent = "🎲 -";
+            statusText.textContent = `${currentPlayer().name}, press Roll Dice.`;
+            rollBtn.disabled = false;
+            nextBtn.disabled = true;
+            renderPlayers();
+        }
+
+        function checkGameOver() {
+            const activePlayers = players.filter(p => p.money > 0);
+            if (activePlayers.length <= 1) {
+                gameOver = true;
+            }
+
+            if (gameOver) {
+                const ranked = [...players].map(player => {
+                    const propertyValue = player.properties.reduce((sum, tileIndex) => sum + boardData[tileIndex].price, 0);
+                    return {
+                        name: player.name,
+                        total: player.money + propertyValue
+                    };
+                }).sort((a, b) => b.total - a.total);
+
+                statusText.textContent = `Game Over! Winner: ${ranked[0].name} with net worth $${ranked[0].total}.`;
+                rollBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        }
+
+        function resetGame() {
+            players.forEach(player => {
+                player.money = 700;
+                player.position = 0;
+                player.properties = [];
+                player.inJail = false;
+                player.jailTurns = 0;
+            });
+
+            currentPlayerIndex = 0;
+            awaitingAnswer = false;
+            pendingAction = null;
+            tileOwners = {};
+            gameOver = false;
+
+            turnLabel.textContent = "Current Turn: Player 1";
+            diceResult.textContent = "🎲 -";
+            statusText.textContent = "Press Roll Dice to start the game.";
+            rollBtn.disabled = false;
+            nextBtn.disabled = true;
+
+            hideQuestion();
+            renderPlayers();
+        }
+
+        rollBtn.addEventListener("click", rollDice);
+        nextBtn.addEventListener("click", nextTurn);
+        resetBtn.addEventListener("click", resetGame);
+        submitAnswerBtn.addEventListener("click", handleAnswerSubmission);
+
+        answerInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                handleAnswerSubmission();
+            }
+        });
+
+        renderPlayers();
+    </script>
+</body>
+
+</html>

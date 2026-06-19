@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibrant Hangman Game</title>
+    <link rel="stylesheet" href="gamezone.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: auto;
+        }
+
+        :root {
+            --bg1: #041f3d;
+            --bg2: #063c6b;
+            --bg3: #00a8cc;
+            --green1: #00ff9d;
+            --green2: #38ef7d;
+            --blue1: #00c6ff;
+            --blue2: #0072ff;
+            --red1: #ff4d6d;
+            --red2: #ff1e56;
+            --white: #ffffff;
+            --text: #eafcff;
+            --muted: #b8e7f3;
+            --card: rgba(255, 255, 255, 0.1);
+            --card-strong: rgba(255, 255, 255, 0.16);
+            --border: rgba(255, 255, 255, 0.18);
+            --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            --glow-blue: 0 0 16px rgba(0, 198, 255, 0.55);
+            --glow-green: 0 0 16px rgba(0, 255, 157, 0.45);
+            --glow-red: 0 0 16px rgba(255, 30, 86, 0.45);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(0, 255, 157, 0.18), transparent 20%),
+                radial-gradient(circle at 80% 15%, rgba(0, 198, 255, 0.22), transparent 20%),
+                radial-gradient(circle at 50% 80%, rgba(255, 30, 86, 0.15), transparent 18%),
+                linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            overflow-x: hidden;
+        }
+
+        .bg-lines::before,
+        .bg-lines::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-lines::before {
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.25;
+        }
+
+        .bg-lines::after {
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 55%);
+            opacity: 0.4;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: min(1220px, 94%);
+            margin: 24px auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 24px 18px 18px;
+            margin-bottom: 18px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.15), rgba(0, 255, 157, 0.12));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            letter-spacing: 1px;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: var(--glow-blue), var(--glow-green);
+        }
+
+        .hero p {
+            margin: 12px auto 0;
+            max-width: 780px;
+            font-size: 1.02rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            min-width: 0;
+        }
+
+        .panel h2 {
+            margin: 0 0 14px;
+            font-size: 1.35rem;
+            color: var(--white);
+            text-shadow: var(--glow-blue);
+        }
+
+        .hangman-stage {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(0, 198, 255, 0.10), rgba(0, 255, 157, 0.08)),
+                rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+            box-shadow: inset 0 0 35px rgba(255, 255, 255, 0.04);
+        }
+
+        svg {
+            width: min(100%, 300px);
+            height: auto;
+        }
+
+        .gallows {
+            stroke: #d7f8ff;
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 10px rgba(0, 198, 255, 0.55));
+        }
+
+        .part {
+            stroke: var(--red1);
+            stroke-width: 7;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            transform-origin: center;
+            transition: opacity 0.28s ease, transform 0.28s ease;
+            filter: drop-shadow(0 0 8px rgba(255, 77, 109, 0.65));
+        }
+
+        .part.show {
+            opacity: 1;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 14px 12px;
+            text-align: center;
+            box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-box .label {
+            font-size: 0.84rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-box .value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--white);
+        }
+
+        .footer-note {
+            margin: 18px 0 0;
+            text-align: center;
+            color: #d8f6ff;
+            font-size: 0.95rem;
+            opacity: 0.92;
+        }
+
+        .scoreboard-box,
+        .word-box,
+        .wrong-box,
+        .hint-box,
+        .controls-box,
+        .keyboard-box {
+            margin-top: 16px;
+            border-radius: 20px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .player-setup {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .player-setup select {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 800;
+            color: #043425;
+            background: linear-gradient(135deg, #ffffff, #b8f3ff);
+        }
+
+        #nameInputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .player-name-input {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 800;
+            outline: none;
+            color: #043425;
+            background: linear-gradient(135deg, #ffffff, #dffaff);
+        }
+
+        .current-player {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--green1);
+            text-shadow: var(--glow-green);
+        }
+
+        .players-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .player-card {
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-weight: 800;
+        }
+
+        .player-card.active {
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.28), rgba(0, 255, 157, 0.22));
+            box-shadow: var(--glow-green);
+            border-color: rgba(0, 255, 157, 0.6);
+        }
+
+        .player-score {
+            margin-top: 6px;
+            font-size: 1.35rem;
+            color: #ffffff;
+        }
+
+        .word-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            min-height: 72px;
+        }
+
+        .letter-slot {
+            width: 48px;
+            height: 58px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(0, 198, 255, 0.18), rgba(0, 255, 157, 0.12));
+            border: 2px solid rgba(255, 255, 255, 0.16);
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            box-shadow: var(--glow-blue);
+        }
+
+        .status-message {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            min-height: 28px;
+        }
+
+        .status-message.win {
+            color: var(--green1);
+            text-shadow: var(--glow-green);
+        }
+
+        .status-message.lose {
+            color: #ffd2db;
+            text-shadow: var(--glow-red);
+        }
+
+        .wrong-letters {
+            text-align: center;
+            min-height: 30px;
+            line-height: 1.8;
+            color: #ffd8df;
+            font-weight: 700;
+            letter-spacing: 1px;
+            word-break: break-word;
+        }
+
+        .hint-text {
+            text-align: center;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 16px;
+            padding: 13px 18px;
+            font-size: 1rem;
+            font-weight: 800;
+            color: white;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        button:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue1), var(--blue2));
+            box-shadow: 0 10px 24px rgba(0, 114, 255, 0.35), var(--glow-blue);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--green1), #00c76f);
+            color: #04253d;
+            box-shadow: 0 10px 24px rgba(0, 255, 157, 0.32), var(--glow-green);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--red1), var(--red2));
+            box-shadow: 0 10px 24px rgba(255, 30, 86, 0.30), var(--glow-red);
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .key-btn {
+            min-height: 48px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 900;
+            background: linear-gradient(180deg, rgba(0, 198, 255, 0.18), rgba(0, 255, 157, 0.14));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: white;
+            box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.03);
+        }
+
+        .key-btn.used-correct {
+            background: linear-gradient(135deg, #00ff9d, #15d86d);
+            color: #043425;
+            box-shadow: var(--glow-green);
+        }
+
+        .key-btn.used-wrong {
+            background: linear-gradient(135deg, #ff6b81, #ff1e56);
+            color: white;
+            box-shadow: var(--glow-red);
+        }
+
+        .key-btn:disabled {
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        .small {
+            font-size: 0.92rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 980px) {
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hangman-stage {
+                min-height: 340px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .wrap {
+                width: 95%;
+                margin: 16px auto 24px;
+            }
+
+            .hero {
+                padding: 20px 14px;
+                border-radius: 22px;
+            }
+
+            .panel {
+                padding: 16px;
+                border-radius: 22px;
+            }
+
+            .stats,
+            .players-board {
+                grid-template-columns: 1fr;
+            }
+
+            .letter-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .letter-slot {
+                width: 40px;
+                height: 52px;
+                font-size: 1.4rem;
+            }
+
+            button,
+            .player-setup select,
+            .player-name-input {
+                width: 100%;
+            }
+
+            .controls-row {
+                flex-direction: column;
+            }
+
+            .hangman-stage {
+                min-height: 300px;
+            }
+
+            svg {
+                width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="hangmanblast.html" class="game-zone-wrap">
+        <div class="game-zone-inner">⚡ Hangman Blast </div>
+    </a>
+
+    <div class="bg-lines"></div>
+
+    <div class="wrap">
+        <section class="hero">
+            <h1>Word Hangman Blast</h1>
+            <p>
+                Guess the hidden word one letter at a time. Each 3 wrong guess adds one body part.
+                Reveal the full word before the drawing is complete and win the round.
+            </p>
+        </section>
+
+        <section class="game-grid">
+            <div class="panel">
+
+
+                <!-- <div class="scoreboard-box">
+                    <div class="small">🏆 Players Points Board</div>
+
+                    <div class="player-setup" id="playerSetup">
+                        <select id="playerCount">
+                            <option value="1">1 Player</option>
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                            <option value="5">5 Players</option>
+                            <option value="6">6 Players</option>
+                        </select>
+
+                        <button class="btn-secondary" id="generateInputsBtn">Enter Names</button>
+
+                        <div id="nameInputs"></div>
+
+                        <button class="btn-primary" id="startPlayersBtn">Start Game</button>
+                        <button class="btn-secondary" id="shuffleOrderBtn">🔀 Shuffle Turn Order</button>
+                        <button class="btn-danger" id="clearScoresBtn">🧹 Refresh Scores</button>
+                    </div> -->
+
+                <!-- <div class="current-player" id="currentPlayerBox">
+                        🎯 Current Turn: Player 1
+                    </div> -->
+
+                <!-- <div class="players-board" id="playersBoard"></div>
+                </div> -->
+
+
+
+                <h2>Hangman Stage</h2>
+
+                <div class="hangman-stage">
+                    <svg viewBox="0 0 300 320" aria-label="Hangman drawing">
+                        <line class="gallows" x1="35" y1="290" x2="150" y2="290"></line>
+                        <line class="gallows" x1="65" y1="290" x2="65" y2="30"></line>
+                        <line class="gallows" x1="65" y1="30" x2="190" y2="30"></line>
+                        <line class="gallows" x1="190" y1="30" x2="190" y2="58"></line>
+
+                        <circle id="part1" class="part" cx="190" cy="84" r="26"></circle>
+                        <line id="part2" class="part" x1="190" y1="110" x2="190" y2="180"></line>
+                        <line id="part3" class="part" x1="190" y1="128" x2="150" y2="160"></line>
+                        <line id="part4" class="part" x1="190" y1="128" x2="230" y2="160"></line>
+                        <line id="part5" class="part" x1="190" y1="180" x2="155" y2="230"></line>
+                        <line id="part6" class="part" x1="190" y1="180" x2="225" y2="230"></line>
+                    </svg>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="label">Wrong Guesses</div>
+                        <div class="value" id="wrongCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Max Allowed</div>
+                        <div class="value">18</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Wins</div>
+                        <div class="value" id="winCount">0</div>
+                    </div>
+                </div>
+
+                <div class="footer-note">
+                    Enter player names, then press Start Game!
+                </div>
+
+                <div class="scoreboard-box">
+                    <div class="small">🏆 Players Points Board</div>
+
+                    <div class="player-setup" id="playerSetup">
+                        <select id="playerCount">
+                            <option value="1">1 Player</option>
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                            <option value="5">5 Players</option>
+                            <option value="6">6 Players</option>
+                        </select>
+
+                        <button class="btn-secondary" id="generateInputsBtn">Enter Names</button>
+
+                        <div id="nameInputs"></div>
+
+                        <button class="btn-primary" id="startPlayersBtn">Start Game</button>
+                        <button class="btn-secondary" id="shuffleOrderBtn">🔀 Shuffle Turn Order</button>
+                        <button class="btn-danger" id="clearScoresBtn">🧹 Refresh Scores</button>
+                    </div>
+
+                    <!-- <div class="current-player" id="currentPlayerBox">
+                        🎯 Current Turn: Player 1
+                    </div> -->
+
+                    <div class="players-board" id="playersBoard"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Guess the Word</h2>
+
+                <div class="word-box">
+                    <div class="small">Hidden Word</div>
+                    <div class="word-display" id="wordDisplay"></div>
+                </div>
+
+                <!-- <div class="wrong-box">
+                    <div class="small">Wrong Letters</div>
+                    <div class="wrong-letters" id="wrongLetters">None yet</div>
+                </div>
+
+                <div class="hint-box">
+                    <div class="small">Hint</div>
+                    <div class="hint-text" id="hintText">Press “New Game” to begin.</div>
+                </div>
+
+                <div class="controls-box">
+                    <div class="controls-row">
+                        <button class="btn-primary" id="newGameBtn">🎮 New Game</button>
+                        <button class="btn-secondary" id="hintBtn">💡 Show Hint</button>
+                        <button class="btn-danger" id="revealBtn">👀 Reveal Word</button>
+                    </div>
+                </div> -->
+
+
+                <div class="keyboard-box">
+                    <div class="status-message" id="statusMessage"> Start guessing letters! </div>
+                    <div class="letter-grid" id="letterGrid"></div>
+                </div>
+
+                <div class="current-player" id="currentPlayerBox">
+                    🎯 Current Turn: Player 1
+                </div>
+
+                <div class="wrong-box">
+                    <div class="small">Wrong Letters</div>
+                    <div class="wrong-letters" id="wrongLetters">None yet</div>
+                </div>
+
+                <div class="hint-box">
+                    <div class="small">Hint</div>
+                    <div class="hint-text" id="hintText">Press “New Game” to begin.</div>
+                </div>
+
+                <div class="controls-box">
+                    <div class="controls-row">
+                        <button class="btn-primary" id="newGameBtn">🎮 New Game</button>
+                        <button class="btn-secondary" id="hintBtn">💡 Show Hint</button>
+                        <button class="btn-danger" id="revealBtn">👀 Reveal Word</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const words = [
+            { word: "planet", hint: "A large object that moves around a star." },
+            { word: "guitar", hint: "A musical instrument with strings." },
+            { word: "school", hint: "A place where students go to learn." },
+            { word: "rainbow", hint: "A colorful arc seen after rain." },
+            { word: "tiger", hint: "A wild animal with black stripes." },
+            { word: "bridge", hint: "A structure built to cross over something." },
+            { word: "garden", hint: "A place where flowers or vegetables grow." },
+            { word: "rocket", hint: "A vehicle that can travel into space." },
+            { word: "ocean", hint: "A huge body of salt water." },
+            { word: "silver", hint: "A shiny gray precious metal." },
+            { word: "castle", hint: "A large fortified building for kings or queens." },
+            { word: "window", hint: "You look through it to see outside." },
+            { word: "bottle", hint: "A container used to hold liquid." },
+            { word: "pencil", hint: "You use it for writing and erasing." },
+            { word: "jungle", hint: "A dense forest with many wild animals." },
+            { word: "library", hint: "A place full of books." },
+            { word: "doctor", hint: "A person who helps sick people get better." },
+            { word: "blanket", hint: "You use it to keep warm." },
+            { word: "diamond", hint: "A very hard and valuable gem." },
+            { word: "computer", hint: "A machine used for typing, browsing, and coding." },
+            { word: "volcano", hint: "A mountain that erupts with lava." },
+            { word: "desert", hint: "A dry, sandy area with very little rain." },
+            { word: "forest", hint: "A large area covered chiefly with trees." },
+            { word: "island", hint: "A piece of land surrounded by water." },
+            { word: "glacier", hint: "A huge mass of ice moving slowly." },
+            { word: "canyon", hint: "A deep gorge, typically with a river." },
+            { word: "valley", hint: "Low land between hills or mountains." },
+            { word: "puddle", hint: "A small pool of liquid on the ground." },
+            { word: "meteor", hint: "A space rock that enters Earth's atmosphere." },
+            { word: "thunder", hint: "The loud noise heard after lightning." },
+            { word: "sunrise", hint: "When the sun first appears in the morning." },
+            { word: "tornado", hint: "A violent, spinning wind storm." },
+            { word: "harvest", hint: "The process of gathering ripe crops." },
+            { word: "meadow", hint: "A field of grass often used for grazing." },
+            { word: "breeze", hint: "A gentle and light wind." },
+            { word: "cavern", hint: "A large underground chamber or cave." },
+            { word: "stream", hint: "A small, narrow river." },
+            { word: "pebble", hint: "A small, smooth stone." },
+            { word: "dolphin", hint: "A very smart sea mammal with a snout." },
+            { word: "spider", hint: "An eight-legged creature that spins webs." },
+            { word: "parrot", hint: "A colorful bird that can mimic speech." },
+            { word: "lizard", hint: "A reptile with a long tail and scaly skin." },
+            { word: "rabbit", hint: "A small animal with long ears that hops." },
+            { word: "monkey", hint: "A clever primate that lives in trees." },
+            { word: "turtle", hint: "An animal with a hard shell on its back." },
+            { word: "beetle", hint: "An insect with a hard wing cover." },
+            { word: "eagle", hint: "A large bird of prey with sharp vision." },
+            { word: "walrus", hint: "A large sea animal with long tusks." },
+            { word: "giraffe", hint: "An animal with a very long neck." },
+            { word: "penguin", hint: "A flightless bird that lives in the cold." },
+            { word: "cheetah", hint: "The fastest land animal in the world." },
+            { word: "hamster", hint: "A small rodent often kept as a pet." },
+            { word: "ostrich", hint: "A large bird that runs but cannot fly." },
+            { word: "shrimp", hint: "A small shellfish with a curved body." },
+            { word: "donkey", hint: "An animal related to the horse with long ears." },
+            { word: "badger", hint: "A burrowing animal with black and white fur." },
+            { word: "pigeon", hint: "A common bird often found in cities." },
+            { word: "kitten", hint: "A very young cat." },
+            { word: "cheese", hint: "A dairy product made from milk curds." },
+            { word: "cookie", hint: "A small, sweet baked treat." },
+            { word: "banana", hint: "A long yellow fruit that you peel." },
+            { word: "burger", hint: "A sandwich with a meat patty inside." },
+            { word: "muffin", hint: "A small, domed cake-like bread." },
+            { word: "teapot", hint: "A container used for brewing and pouring tea." },
+            { word: "fridge", hint: "A machine used to keep food cold." },
+            { word: "napkin", hint: "A piece of cloth or paper used while eating." },
+            { word: "butter", hint: "A yellow fat spread made from cream." },
+            { word: "spatula", hint: "A tool used for flipping or spreading food." },
+            { word: "cherry", hint: "A small, round red fruit with a stone." },
+            { word: "dinner", hint: "The main meal of the day, eaten at night." },
+            { word: "pantry", hint: "A small room or closet for storing food." },
+            { word: "garlic", hint: "A strong-smelling bulb used in cooking." },
+            { word: "honey", hint: "A sweet sticky liquid made by bees." },
+            { word: "kettle", hint: "A metal pot used for boiling water." },
+            { word: "noodle", hint: "A long, thin strip of pasta." },
+            { word: "orange", hint: "A round citrus fruit and a color." },
+            { word: "picnic", hint: "A meal eaten outdoors on the grass." },
+            { word: "recipe", hint: "Instructions for cooking a specific dish." },
+            { word: "camera", hint: "A device used to take photographs." },
+            { word: "wallet", hint: "A small case for carrying money and cards." },
+            { word: "hammer", hint: "A tool used for hitting nails into wood." },
+            { word: "mirror", hint: "A glass surface that shows your reflection." },
+            { word: "pillow", hint: "A soft cushion for your head while sleeping." },
+            { word: "ladder", hint: "A structure used for climbing up or down." },
+            { word: "candle", hint: "A wax stick that provides light when lit." },
+            { word: "bucket", hint: "An open container with a handle for water." },
+            { word: "basket", hint: "A container made of woven strips." },
+            { word: "button", hint: "A small disk used to fasten clothes." },
+            { word: "carpet", hint: "A heavy fabric used to cover floors." },
+            { word: "curtain", hint: "A piece of cloth hung to cover a window." },
+            { word: "eraser", hint: "An object used to remove pencil marks." },
+            { word: "folder", hint: "A cover used to hold loose papers." },
+            { word: "helmet", hint: "A hard hat worn to protect the head." },
+            { word: "jacket", hint: "A short coat worn for warmth." },
+            { word: "keypad", hint: "A set of buttons with numbers or letters." },
+            { word: "laptop", hint: "A portable computer." },
+            { word: "magnet", hint: "An object that attracts iron or steel." },
+            { word: "soccer", hint: "A game played by kicking a ball into a goal." },
+            { word: "tennis", hint: "A game played with rackets and a small ball." },
+            { word: "puzzle", hint: "A game or toy that tests your ingenuity." },
+            { word: "canvas", hint: "A strong cloth used by artists for painting." },
+            { word: "ballet", hint: "A type of artistic dance with graceful moves." },
+            { word: "hiking", hint: "The activity of going for long walks." },
+            { word: "skates", hint: "Boots with wheels or blades for gliding." },
+            { word: "trophy", hint: "A prize given for winning a competition." },
+            { word: "whistle", hint: "A small device that makes a high sound." },
+            { word: "karate", hint: "A martial art involving kicks and punches." },
+            { word: "hockey", hint: "A game played on ice with sticks and a puck." },
+            { word: "chess", hint: "A board game for two players with kings." },
+            { word: "darts", hint: "A game where small pointed missiles are thrown." },
+            { word: "fencing", hint: "The sport of fighting with swords." },
+            { word: "jogging", hint: "Running at a steady, slow pace." },
+            { word: "origami", hint: "The Japanese art of folding paper." },
+            { word: "poetry", hint: "Literary work written in verse and rhythm." },
+            { word: "quizzing", hint: "The act of asking or answering questions." },
+            { word: "surfing", hint: "Riding waves on a special board." },
+            { word: "yachting", hint: "The sport of racing or sailing boats." },
+            { word: "farmer", hint: "A person who grows crops and raises animals." },
+            { word: "baker", hint: "A person who makes bread and cakes." },
+            { word: "pilot", hint: "A person who flies an airplane." },
+            { word: "artist", hint: "A person who creates paintings or drawings." },
+            { word: "dentist", hint: "A person who takes care of your teeth." },
+            { word: "lawyer", hint: "A person who practices or studies law." },
+            { word: "writer", hint: "A person who writes books or stories." },
+            { word: "tailor", hint: "A person who makes or repairs clothes." },
+            { word: "nurse", hint: "A person trained to help doctors and patients." },
+            { word: "actor", hint: "A person who performs in plays or movies." },
+            { word: "coach", hint: "A person who trains athletes or teams." },
+            { word: "editor", hint: "A person who checks and corrects text." },
+            { word: "judge", hint: "A person who decides cases in a court." },
+            { word: "knight", hint: "A soldier in armor from medieval times." },
+            { word: "miner", hint: "A person who works in a mine underground." },
+            { word: "poet", hint: "A person who writes poems." },
+            { word: "sailor", hint: "A person who works on a ship." },
+            { word: "singer", hint: "A person who performs songs." },
+            { word: "wizard", hint: "A man with magical powers." },
+            { word: "battery", hint: "A device that stores electrical energy." },
+            { word: "engine", hint: "A machine that converts fuel into motion." },
+            { word: "antenna", hint: "A wire or rod used to receive signals." },
+            { word: "circuit", hint: "A path for electricity to flow through." },
+            { word: "microscope", hint: "A tool used to see tiny objects." },
+            { word: "compass", hint: "A tool that shows the direction of North." },
+            { word: "telescope", hint: "A tool used to see distant stars." },
+            { word: "gravity", hint: "The force that pulls objects to Earth." },
+            { word: "helium", hint: "A light gas used to fill balloons." },
+            { word: "oxygen", hint: "The gas that humans need to breathe." },
+            { word: "atom", hint: "The smallest unit of a chemical element." },
+            { word: "fossil", hint: "The remains of a prehistoric organism." },
+            { word: "galaxy", hint: "A huge system of stars and planets." },
+            { word: "robot", hint: "A machine that can perform tasks automatically." },
+            { word: "sensor", hint: "A device that detects physical changes." },
+            { word: "theory", hint: "An idea used to explain something." },
+            { word: "vacuum", hint: "A space that is empty of all matter." },
+            // { word: "x-ray", hint: "An image showing the inside of the body." },
+            { word: "airport", hint: "A place where airplanes land and take off." },
+            { word: "bakery", hint: "A shop that sells bread and pastries." },
+            { word: "church", hint: "A building used for Christian worship." },
+            { word: "factory", hint: "A building where goods are manufactured." },
+            { word: "garage", hint: "A building for keeping motor vehicles." },
+            { word: "hotel", hint: "A place providing rooms for travelers." },
+            { word: "market", hint: "A place where people buy and sell goods." },
+            { word: "museum", hint: "A place that displays historical objects." },
+            { word: "office", hint: "A room or building where people work." },
+            { word: "palace", hint: "The official home of a king or queen." },
+            { word: "prison", hint: "A building where criminals are kept." },
+            { word: "quarry", hint: "A place where stone is extracted." },
+            { word: "resort", hint: "A place people go for vacations." },
+            { word: "stadium", hint: "A large building for sports events." },
+            { word: "theater", hint: "A place where plays or movies are shown." },
+            { word: "temple", hint: "A building used for religious worship." },
+            { word: "university", hint: "A place for high-level education." },
+            { word: "village", hint: "A small group of houses in the country." },
+            { word: "bicycle", hint: "A vehicle with two wheels moved by pedals." },
+            { word: "bus", hint: "A large vehicle that carries many people." },
+            { word: "canoe", hint: "A narrow boat moved with a paddle." },
+            { word: "ferry", hint: "A boat that carries people across water." },
+            { word: "glider", hint: "An aircraft that flies without an engine." },
+            { word: "helicopter", hint: "An aircraft with overhead spinning blades." },
+            { word: "jet", hint: "A fast airplane powered by jet engines." },
+            { word: "metro", hint: "An underground railway system." },
+            { word: "scooter", hint: "A small vehicle with two wheels and a motor." },
+            { word: "ship", hint: "A large vessel that travels on the ocean." },
+            { word: "taxi", hint: "A car that you pay to take you somewhere." },
+            { word: "tractor", hint: "A vehicle used for pulling farm machinery." },
+            { word: "train", hint: "A series of cars connected on a track." },
+            { word: "truck", hint: "A large vehicle used for carrying goods." },
+            { word: "van", hint: "A vehicle used for moving people or cargo." },
+            { word: "wagon", hint: "A vehicle with four wheels pulled by horses." },
+            { word: "yacht", hint: "A large, expensive boat used for pleasure." },
+            { word: "zeppelin", hint: "A large airship filled with gas." },
+            { word: "subway", hint: "An underground electric railroad." },
+            { word: "beauty", hint: "A quality that pleases the senses." },
+            { word: "courage", hint: "The ability to do something frightening." },
+            { word: "dream", hint: "Images or thoughts while you sleep." },
+            { word: "energy", hint: "The power to do work or be active." },
+            { word: "friend", hint: "A person you like and enjoy being with." },
+            { word: "growth", hint: "The process of increasing in size." },
+            { word: "health", hint: "The state of being free from illness." },
+            { word: "journey", hint: "The act of traveling from one place to another." },
+            { word: "knowledge", hint: "Facts and information you have learned." },
+            { word: "light", hint: "The natural agent that makes things visible." },
+            { word: "memory", hint: "The ability to remember things." },
+            { word: "nature", hint: "The physical world and everything in it." },
+            { word: "opinion", hint: "A view or judgment formed about something." },
+            { word: "peace", hint: "A state of quiet and calm." },
+            { word: "quiet", hint: "Making very little or no noise." },
+            { word: "rhythm", hint: "A strong, regular, repeated sound." },
+            { word: "silence", hint: "Complete absence of sound." },
+            { word: "truth", hint: "The quality of being in accord with fact." },
+            { word: "victory", hint: "An act of winning a game or battle." },
+            { word: "anchor", hint: "A heavy metal hook to keep a ship in place." },
+            { word: "bellows", hint: "A tool used to blow air into a fire." },
+            { word: "diadem", hint: "A jeweled crown or headband worn as a symbol of royalty." },
+            { word: "embers", hint: "Small glowing pieces of coal or wood in a dying fire." },
+            { word: "fleece", hint: "The thick woolly coat of a sheep." },
+            { word: "gavel", hint: "A small hammer used by a judge to call for order." },
+            { word: "hatch", hint: "An opening or door in the deck of a ship." },
+            { word: "inkwell", hint: "A small container for writing ink." },
+            { word: "jigsaw", hint: "A puzzle consisting of many interlocking pieces." },
+            { word: "architecture", hint: "The art or practice of designing and constructing buildings." },
+            { word: "astronomy", hint: "The branch of science that deals with space and the physical universe." },
+            { word: "bibliophile", hint: "A person who collects or has a great love of books." },
+            { word: "calibration", hint: "The process of adjusting an instrument to ensure its accuracy." },
+            { word: "caterpillar", hint: "The worm-like larva of a butterfly or a moth." },
+            { word: "destination", hint: "The place to which someone or something is going or being sent." },
+            { word: "dictionary", hint: "A book that lists words and explains their meanings." },
+            { word: "earthquake", hint: "A sudden and violent shaking of the ground." },
+            { word: "electricity", hint: "A form of energy resulting from the existence of charged particles." },
+            { word: "environment", hint: "The surroundings or conditions in which a person, animal, or plant lives." },
+            { word: "experiment", hint: "A scientific procedure undertaken to make a discovery." },
+            { word: "foundation", hint: "The lowest load-bearing part of a building, typically below ground." },
+            { word: "generation", hint: "All of the people born and living at about the same time." },
+            { word: "gymnastics", hint: "Exercises displaying physical agility and coordination." },
+            { word: "imagination", hint: "The faculty or action of forming new ideas or images." },
+            { word: "information", hint: "Facts provided or learned about something or someone." },
+            { word: "ingredients", hint: "Any of the foods that are combined to make a particular dish." },
+            { word: "instructor", hint: "A person who teaches something or provides guidance." },
+            { word: "investment", hint: "The action or process of investing money for profit." },
+            { word: "journalist", hint: "A person who writes for newspapers, magazines, or news websites." },
+            { word: "laboratory", hint: "A room or building equipped for scientific research or teaching." },
+            { word: "lighthouse", hint: "A tower with a bright light that guides ships at sea." },
+            { word: "literature", hint: "Written works, especially those considered of superior merit." },
+            { word: "locomotive", hint: "A powered railway vehicle used for pulling trains." },
+            { word: "mathematics", hint: "The abstract science of number, quantity, and space." },
+            { word: "microphone", hint: "An instrument for converting sound waves into electrical energy." },
+            { word: "navigation", hint: "The process of monitoring and controlling the movement of a craft." },
+            { word: "neighborhood", hint: "A district or community within a town or city." },
+            { word: "observation", hint: "The action or process of closely monitoring something." },
+            { word: "opportunity", hint: "A set of circumstances that makes it possible to do something." },
+            { word: "orchestra", hint: "A large group of musicians playing different instruments together." },
+            { word: "organization", hint: "An organized body of people with a particular purpose." },
+            { word: "parliament", hint: "The highest legislature in many countries." },
+            { word: "pedestrian", hint: "A person walking rather than traveling in a vehicle." },
+            { word: "percussion", hint: "Musical instruments played by striking or shaking." },
+            { word: "performance", hint: "An act of staging or presenting a play, concert, or other form of entertainment." },
+            { word: "photography", hint: "The art or practice of taking and processing photographs." },
+            { word: "playground", hint: "An outdoor area provided for children to play in." },
+            { word: "population", hint: "All the inhabitants of a particular town, area, or country." },
+            { word: "precipice", hint: "A very steep rock face or cliff." },
+            { word: "prediction", hint: "A forecast of what will happen in the future." },
+            { word: "preservation", hint: "The act of keeping something in its original state." },
+            { word: "production", hint: "The action of making or manufacturing from components or raw materials." },
+            { word: "profession", hint: "A paid occupation that involves prolonged training." },
+            { word: "punctuation", hint: "The marks used in writing to separate sentences and elements." },
+            { word: "quarantine", hint: "A state of isolation to prevent the spread of disease." },
+            { word: "reflection", hint: "The throwing back by a body or surface of light or heat." },
+            { word: "refrigerator", hint: "An appliance that keeps food and drinks cold." },
+            { word: "relaxation", hint: "The state of being free from tension and anxiety." },
+            { word: "reservation", hint: "An arrangement to keep something for a particular person." },
+            { word: "restaurant", hint: "A place where people pay to sit and eat meals." },
+            { word: "revolution", hint: "A forcible overthrow of a government or social order." },
+            { word: "sandcastle", hint: "A model of a castle built out of sand." },
+            { word: "satellite", hint: "An artificial body placed in orbit around the earth or moon." },
+            { word: "scavenger", hint: "An animal that feeds on carrion, dead plant material, or refuse." },
+            { word: "sculpture", hint: "The art of making two- or three-dimensional representative forms." },
+            { word: "skyscraper", hint: "A very tall building of many stories." },
+            { word: "smartphone", hint: "A mobile phone that performs many of the functions of a computer." },
+            { word: "specialist", hint: "A person who concentrates on a particular subject or activity." },
+            { word: "spectacles", hint: "Another term for a pair of glasses." },
+            { word: "statistics", hint: "The practice or science of collecting and analyzing numerical data." },
+            { word: "stethoscope", hint: "A medical instrument for listening to someone's heart or breathing." },
+            { word: "strawberry", hint: "A sweet red pulpy fruit with seeds on the surface." },
+            { word: "submarine", hint: "A watercraft capable of independent operation underwater." },
+            { word: "sunflower", hint: "A tall plant with a very large yellow flower head." },
+            { word: "supermarket", hint: "A large self-service store selling foods and household goods." },
+            { word: "temperature", hint: "The degree or intensity of heat present in a substance." },
+            { word: "thermometer", hint: "An instrument for measuring and indicating temperature." },
+            { word: "tournament", hint: "A series of contests between a number of competitors." },
+            { word: "translation", hint: "The process of moving text from one language to another." },
+            { word: "transportation", hint: "The action of moving someone or something from one place to another." },
+            { word: "underground", hint: "Situated, occurring, or operating below the surface of the earth." },
+            { word: "vegetable", hint: "A plant or part of a plant used as food." },
+            { word: "ventilation", hint: "The provision of fresh air to a room or building." },
+            { word: "veterinary", hint: "Relating to the diseases and injuries of animals." },
+            { word: "vocabulary", hint: "The body of words used in a particular language." },
+            { word: "waterfall", hint: "A cascade of water falling from a height." },
+            { word: "wilderness", hint: "An uncultivated, uninhabited, and inhospitable region." },
+            { word: "windshield", hint: "A window at the front of a vehicle." },
+            { word: "yesterday", hint: "The day before today." },
+            { word: "zoologist", hint: "An expert in or student of the behavior and classification of animals." },
+            { word: "abundance", hint: "A very large quantity of something." },
+            { word: "adventure", hint: "An unusual and exciting or daring experience." },
+            { word: "broadcast", hint: "Transmit a program or some information by radio or television." },
+            { word: "celebration", hint: "The action of marking one's pleasure at an important event." },
+            { word: "collections", hint: "The action or process of collecting someone or something." },
+            { word: "community", hint: "A group of people living in the same place or having a particular characteristic in common." },
+            { word: "conclusion", hint: "The end or finish of an event or process." },
+            { word: "confidence", hint: "The feeling or belief that one can rely on someone or something." },
+            { word: "connection", hint: "A relationship in which a person, thing, or idea is linked." },
+            { word: "description", hint: "A spoken or written representation or account of a person, object, or event." },
+            { word: "development", hint: "The process of developing or being developed." },
+            { word: "difference", hint: "A point or way in which people or things are not the same." },
+            { word: "discovery", hint: "The action or process of finding or learning something for the first time." },
+            { word: "education", hint: "The process of receiving or giving systematic instruction." },
+            { word: "experience", hint: "Practical contact with and observation of facts or events." },
+            { word: "expression", hint: "The action of making known one's thoughts or feelings." }
+        ];
+
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+        const wordDisplay = document.getElementById("wordDisplay");
+        const wrongLettersEl = document.getElementById("wrongLetters");
+        const wrongCountEl = document.getElementById("wrongCount");
+        const winCountEl = document.getElementById("winCount");
+        const hintTextEl = document.getElementById("hintText");
+        const statusMessageEl = document.getElementById("statusMessage");
+        const letterGrid = document.getElementById("letterGrid");
+        const newGameBtn = document.getElementById("newGameBtn");
+        const hintBtn = document.getElementById("hintBtn");
+        const revealBtn = document.getElementById("revealBtn");
+        const clearScoresBtn = document.getElementById("clearScoresBtn");
+        const shuffleOrderBtn = document.getElementById("shuffleOrderBtn");
+
+        const playerCount = document.getElementById("playerCount");
+        const generateInputsBtn = document.getElementById("generateInputsBtn");
+        const startPlayersBtn = document.getElementById("startPlayersBtn");
+        const nameInputs = document.getElementById("nameInputs");
+        const playersBoard = document.getElementById("playersBoard");
+        const currentPlayerBox = document.getElementById("currentPlayerBox");
+
+        let selectedWord = "";
+        let selectedHint = "";
+        let guessedLetters = [];
+        let wrongLetters = [];
+        let wins = 0;
+        let gameOver = true;
+        let hintUsed = false;
+
+        let players = [{ name: "Player 1", score: 0 }];
+        let currentPlayerIndex = 0;
+
+        function saveScores() {
+            localStorage.setItem("hangmanPlayers", JSON.stringify(players));
+            localStorage.setItem("hangmanWins", String(wins));
+        }
+
+        function loadScores() {
+            const savedPlayers = localStorage.getItem("hangmanPlayers");
+            const savedWins = localStorage.getItem("hangmanWins");
+
+            if (savedPlayers) {
+                try {
+                    const parsedPlayers = JSON.parse(savedPlayers);
+
+                    if (Array.isArray(parsedPlayers) && parsedPlayers.length > 0) {
+                        players = parsedPlayers;
+                    }
+                } catch {
+                    players = [{ name: "Player 1", score: 0 }];
+                }
+            }
+
+            if (savedWins) {
+                wins = Number(savedWins) || 0;
+                winCountEl.textContent = wins;
+            }
+
+            currentPlayerIndex = 0;
+        }
+
+        function renderPlayersBoard() {
+            playersBoard.innerHTML = "";
+
+            if (!players.length) {
+                players = [{ name: "Player 1", score: 0 }];
+                currentPlayerIndex = 0;
+            }
+
+            if (currentPlayerIndex >= players.length) {
+                currentPlayerIndex = 0;
+            }
+
+            players.forEach((player, index) => {
+                const card = document.createElement("div");
+                card.className = "player-card";
+
+                if (index === currentPlayerIndex && !gameOver) {
+                    card.classList.add("active");
+                }
+
+                card.innerHTML = `
+      <div>${player.name}</div>
+      <div class="player-score">⭐ ${player.score}</div>
+    `;
+
+                playersBoard.appendChild(card);
+            });
+
+            currentPlayerBox.textContent = `🎯 Current Turn: ${players[currentPlayerIndex].name}`;
+        }
+
+        function randomWord() {
+            return words[Math.floor(Math.random() * words.length)];
+        }
+
+        function createKeyboard() {
+            letterGrid.innerHTML = "";
+
+            alphabet.forEach(letter => {
+                const btn = document.createElement("button");
+                btn.className = "key-btn";
+                btn.textContent = letter;
+                btn.dataset.letter = letter;
+                btn.addEventListener("click", () => handleGuess(letter.toLowerCase()));
+                letterGrid.appendChild(btn);
+            });
+        }
+
+        function updateKeyboard() {
+            const buttons = document.querySelectorAll(".key-btn");
+
+            buttons.forEach(btn => {
+                const letter = btn.dataset.letter.toLowerCase();
+
+                btn.disabled =
+                    guessedLetters.includes(letter) ||
+                    wrongLetters.includes(letter) ||
+                    gameOver;
+
+                btn.classList.remove("used-correct", "used-wrong");
+
+                if (guessedLetters.includes(letter)) {
+                    btn.classList.add("used-correct");
+                }
+
+                if (wrongLetters.includes(letter)) {
+                    btn.classList.add("used-wrong");
+                }
+            });
+        }
+
+        function renderWord() {
+            wordDisplay.innerHTML = "";
+
+            selectedWord.split("").forEach(letter => {
+                const slot = document.createElement("div");
+                slot.className = "letter-slot";
+                slot.textContent =
+                    guessedLetters.includes(letter) || gameOver ? letter.toUpperCase() : "";
+
+                wordDisplay.appendChild(slot);
+            });
+        }
+
+        function updateWrongLetters() {
+            wrongLettersEl.textContent = wrongLetters.length
+                ? wrongLetters.map(l => l.toUpperCase()).join(" • ")
+                : "None yet";
+
+            wrongCountEl.textContent = wrongLetters.length;
+        }
+
+        function updateHangman() {
+            const bodyPartsToShow = Math.floor(wrongLetters.length / 3);
+
+            for (let i = 1; i <= 6; i++) {
+                const part = document.getElementById(`part${i}`);
+
+                if (i <= bodyPartsToShow) {
+                    part.classList.add("show");
+                } else {
+                    part.classList.remove("show");
+                }
+            }
+        }
+
+        function setStatus(message, type = "") {
+            statusMessageEl.textContent = message;
+            statusMessageEl.className = "status-message";
+
+            if (type) {
+                statusMessageEl.classList.add(type);
+            }
+        }
+
+        // function createNameInputs() {
+        //     const count = Number(playerCount.value);
+        //     nameInputs.innerHTML = "";
+
+        //     for (let i = 1; i <= count; i++) {
+        //         const input = document.createElement("input");
+        //         input.className = "player-name-input";
+        //         input.placeholder = `Enter Player ${i} name`;
+        //         input.value = `Player ${i}`;
+        //         nameInputs.appendChild(input);
+        //     }
+        // }
+
+
+        function createNameInputs() {
+            const count = Number(playerCount.value);
+            nameInputs.innerHTML = "";
+
+            for (let i = 1; i <= count; i++) {
+                const input = document.createElement("input");
+                input.className = "player-name-input";
+                input.placeholder = `Enter Player ${i} name`;
+
+                input.value = players[i - 1]?.name || `Player ${i}`;
+
+                input.addEventListener("input", () => {
+                    const oldName = players[i - 1]?.name || `Player ${i}`;
+                    const newName = input.value.trim() || `Player ${i}`;
+
+                    if (players[i - 1]) {
+                        players[i - 1].name = newName;
+                    } else {
+                        players[i - 1] = { name: newName, score: 0 };
+                    }
+
+                    saveScores();
+                    renderPlayersBoard();
+                });
+
+                nameInputs.appendChild(input);
+            }
+        }
+
+
+
+        function nextPlayer() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            renderPlayersBoard();
+        }
+
+        function addScore(points) {
+            players[currentPlayerIndex].score += points;
+            saveScores();
+            renderPlayersBoard();
+        }
+
+        function checkGameResult() {
+            const won = selectedWord.split("").every(letter => guessedLetters.includes(letter));
+
+            if (won) {
+                gameOver = true;
+                wins++;
+                winCountEl.textContent = wins;
+                addScore(10);
+                renderWord();
+                updateKeyboard();
+                renderPlayersBoard();
+                saveScores();
+                setStatus(`🎉 ${players[currentPlayerIndex].name} won this round! +10 bonus!`, "win");
+                return;
+            }
+
+            if (wrongLetters.length >= 18) {
+                gameOver = true;
+                renderWord();
+                updateKeyboard();
+                renderPlayersBoard();
+                setStatus(`💥 You lost! The word was "${selectedWord.toUpperCase()}".`, "lose");
+            }
+        }
+
+        function handleGuess(letter) {
+            if (gameOver || !/^[a-z]$/.test(letter)) return;
+            if (guessedLetters.includes(letter) || wrongLetters.includes(letter)) return;
+
+            if (selectedWord.includes(letter)) {
+                guessedLetters.push(letter);
+
+                const matchedCount = selectedWord
+                    .split("")
+                    .filter(char => char === letter).length;
+
+                addScore(10 * matchedCount);
+
+                renderWord();
+                updateKeyboard();
+                checkGameResult();
+            } else {
+                wrongLetters.push(letter);
+                addScore(-5);
+                updateWrongLetters();
+                updateHangman();
+                updateKeyboard();
+                checkGameResult();
+
+                if (!gameOver) {
+                    nextPlayer();
+                }
+            }
+        }
+
+        function startGame() {
+            const item = randomWord();
+
+            selectedWord = item.word.toLowerCase();
+            selectedHint = item.hint;
+            guessedLetters = [];
+            wrongLetters = [];
+            gameOver = false;
+            hintUsed = false;
+
+            renderWord();
+            updateWrongLetters();
+            updateHangman();
+            createKeyboard();
+            updateKeyboard();
+            renderPlayersBoard();
+
+            hintTextEl.textContent = "Hint hidden. Press “Show Hint” when needed.";
+            setStatus("Start guessing letters!!!!");
+            window.scrollTo(0, 0);
+        }
+
+        function shufflePlayersOrder() {
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+
+            currentPlayerIndex = 0;
+            saveScores();
+            renderPlayersBoard();
+            setStatus(` New turn order: ${players.map(p => p.name).join(" → ")}`);
+        }
+
+        function startNextRound() {
+            startGame();
+        }
+
+        generateInputsBtn.addEventListener("click", createNameInputs);
+
+        startPlayersBtn.addEventListener("click", () => {
+            const count = Number(playerCount.value);
+            const inputs = document.querySelectorAll(".player-name-input");
+
+            const scoreMap = {};
+            players.forEach(player => {
+                scoreMap[player.name] = player.score;
+            });
+
+            players = [];
+
+            if (inputs.length === count) {
+                inputs.forEach((input, index) => {
+                    const name = input.value.trim() || `Player ${index + 1}`;
+
+                    players.push({
+                        name: name,
+                        score: scoreMap[name] ?? 0
+                    });
+                });
+            } else {
+                for (let i = 1; i <= count; i++) {
+                    const name = `Player ${i}`;
+
+                    players.push({
+                        name: name,
+                        score: scoreMap[name] ?? 0
+                    });
+                }
+            }
+
+            currentPlayerIndex = 0;
+            saveScores();
+            renderPlayersBoard();
+            startGame();
+        });
+
+        hintBtn.addEventListener("click", () => {
+            if (!selectedWord) return;
+
+            if (hintUsed) {
+                hintTextEl.textContent = selectedHint;
+                return;
+            }
+
+            hintUsed = true;
+            hintTextEl.textContent = selectedHint;
+            addScore(-50);
+        });
+
+        revealBtn.addEventListener("click", () => {
+            if (!selectedWord || gameOver) return;
+
+            gameOver = true;
+            addScore(-20);
+            renderWord();
+            updateKeyboard();
+            renderPlayersBoard();
+            setStatus(`👀 Word revealed: "${selectedWord.toUpperCase()}"`, "lose");
+        });
+
+        clearScoresBtn.addEventListener("click", () => {
+            players.forEach(player => {
+                player.score = 0;
+            });
+
+            wins = 0;
+            winCountEl.textContent = wins;
+            currentPlayerIndex = 0;
+            saveScores();
+            renderPlayersBoard();
+            setStatus("🧹 Scoreboard refreshed! Fresh start.");
+        });
+
+        newGameBtn.addEventListener("click", startNextRound);
+        shuffleOrderBtn.addEventListener("click", shufflePlayersOrder);
+
+        document.addEventListener("keydown", e => {
+            const key = e.key.toLowerCase();
+            handleGuess(key);
+        });
+
+        window.addEventListener("load", () => {
+            loadScores();
+            playerCount.value = String(players.length);
+            createNameInputs();
+            createKeyboard();
+            updateKeyboard();
+            renderPlayersBoard();
+
+            selectedWord = "";
+            selectedHint = "";
+            guessedLetters = [];
+            wrongLetters = [];
+            gameOver = true;
+            hintUsed = false;
+
+            wordDisplay.innerHTML = "";
+            wrongLettersEl.textContent = "None yet";
+            wrongCountEl.textContent = "0";
+            hintTextEl.textContent = 'Press "Start Game" to begin.';
+            setStatus("Type with your keyboard or tap the letters below!");
+
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 50);
+        });
+    </script>
+</body>
+
+</html>
